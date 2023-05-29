@@ -16,6 +16,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.tobie.newfinedust.MainActivity
 import com.tobie.newfinedust.models.*
+import com.tobie.newfinedust.utils.Etc
 import com.tobie.repository.MainRepository
 import kotlinx.coroutines.*
 import java.util.*
@@ -128,6 +129,7 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
         }
     }
 
+
     /**
      * 자신의 위치 정보를 가져와 주소명을 가져온다.
      */
@@ -155,20 +157,19 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         Log.i(TAG, "Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU")
                         geocoder.getFromLocation(location.latitude, location.longitude,1) { addressList ->
-                            val address = addressList[0].getAddressLine(0).split(" ")
-                            _address.postValue("${address[1]} ${address[2]} ${address[3]}")
+                            _address.postValue(Etc.translationAddress(addressList))
                         }
                     }
-
+                    // 36.6137, 127.4364,
                     else {
                         Log.i(TAG, "NOT Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU")
-                        val addressList = geocoder.getFromLocation(location.latitude, location.longitude,1)
+                        val addressList = geocoder.getFromLocation(location.latitude, location.longitude,3)
+
                         if (addressList != null) {
-                            val address = addressList[0].getAddressLine(0).split(" ")
-                            _address.postValue("${address[1]} ${address[2]} ${address[3]}")
+                            _address.postValue(Etc.translationAddress(addressList))
                         }
                         else {
-                            Log.i(TAG, "address null!")
+                            Log.e(TAG, "가져온 위도, 경도로 주소값 못 가져옴")
                         }
                     }
                 }
@@ -195,3 +196,23 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
         job?.cancel()
     }
 }
+
+
+//                            for(value in addressList){
+//                                Log.d(TAG, value.toString())
+//
+//                                // thoroughfare=null 경우 도로명주소가 나온경우이다.
+//                                // umdName 규격상 구도로 주소명을 넣어야된다.
+//                                 if(value.thoroughfare != null){
+//                                     val address = value.getAddressLine(0).split(" ")
+//
+//                                     // sub-admin ex) (구)가 포함된 주소는 index:4번째 까지 포함해야된다.
+//                                     // ex) 충청북도 청주시 흥덕구 가경동
+//                                     if(address[4].contains("동")){
+//                                         _address.postValue("${address[1]} ${address[2]} ${address[3]} ${address[4]}")
+//                                     }
+//                                     else {
+//                                         _address.postValue("${address[1]} ${address[2]} ${address[3]}")
+//                                     }
+//                                 }
+//                            }
