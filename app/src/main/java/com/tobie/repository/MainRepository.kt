@@ -17,8 +17,8 @@ class MainRepository constructor(private val retrofitService: RetrofitService) {
                 fineDustRequestData.ver
             )
 
-    suspend fun getTmxy(tmXY: TmxyData)
-            = retrofitService.getTmxy(tmXY.returnType, tmXY.numOfRows, tmXY.pageNo, tmXY.umdName)
+    suspend fun getTmxy(tmXYData: TmxyData)
+            = retrofitService.getTmxy(tmXYData.returnType, tmXYData.numOfRows, tmXYData.pageNo, tmXYData.umdName)
 
     suspend fun getStation(stationData: StationData) = retrofitService.getStation(
         stationData.returnType,
