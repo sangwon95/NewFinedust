@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.View.OnClickListener
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -15,11 +16,13 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.tobie.newfinedust.adapter.ViewPager2Adapter
 import com.tobie.newfinedust.databinding.ActivityMainBinding
+import com.tobie.newfinedust.models.DustItem
 import com.tobie.newfinedust.service.RetrofitService
 import com.tobie.newfinedust.utils.Constants
 import com.tobie.newfinedust.viewmodels.MainViewModel
 import com.tobie.newfinedust.viewmodels.MainViewModelFactory
 import com.tobie.repository.MainRepository
+import eightbitlab.com.blurview.RenderScriptBlur
 import kotlin.collections.ArrayList
 
 /**
@@ -49,7 +52,9 @@ class MainActivity : AppCompatActivity(), OnClickListener {
     private lateinit var viewModel: MainViewModel
     private lateinit var adapter: ViewPager2Adapter
 
-    private var data: ArrayList<Int> = arrayListOf(1, 2, 3)
+    private var address: ArrayList<String> = arrayListOf("송강동", "관평동", "전민동")
+
+    //private var data: ArrayList<Int> = arrayListOf(1, 2, 3)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,10 +73,7 @@ class MainActivity : AppCompatActivity(), OnClickListener {
         // Add Button
         // binding.button.setOnClickListener(this)
 
-        // ViewPager2
-        adapter = ViewPager2Adapter(data)
-        binding.viewPager2.adapter = adapter // 어뎁터 생성
-        binding.viewPager2.orientation = ViewPager2.ORIENTATION_HORIZONTAL // 가로 방향 스크롤
+
     }
 
 
@@ -105,6 +107,12 @@ class MainActivity : AppCompatActivity(), OnClickListener {
         // 미세먼지 수치 수신
         viewModel.dustValue.observe(this) {
             Log.d(TAG, it.toString())
+            var dustItemList: ArrayList<DustItem> = arrayListOf(it, it, it)
+
+            // ViewPager2
+            adapter = ViewPager2Adapter(dustItemList, this, address)
+            binding.viewPager2.adapter = adapter // 어뎁터 생성
+            binding.viewPager2.orientation = ViewPager2.ORIENTATION_HORIZONTAL // 가로 방향 스크롤
         }
 
 
@@ -194,9 +202,9 @@ class MainActivity : AppCompatActivity(), OnClickListener {
     }
 
     private fun update() {
-        data.add(4)
-        adapter.update(data)
-        Toast.makeText(this@MainActivity, "추가 완료", Toast.LENGTH_SHORT).show()
+//        data.add(4)
+//        adapter.update(data)
+//        Toast.makeText(this@MainActivity, "추가 완료", Toast.LENGTH_SHORT).show()
     }
 
     override fun onClick(view: View?) {
