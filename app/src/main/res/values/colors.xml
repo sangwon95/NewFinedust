@@ -9,11 +9,19 @@
     <color name="white">#FFFFFFFF</color>
     <color name="gray">#838383</color>
 
-    <color name="light_Background">#E0E5Ec</color>
+    <color name="light_Background">#6d9ad2</color>
     <color name="shadow_light_color">#FFFFFFFF</color>
     <color name="shadow_dark_color">#bebebe</color>
 
     <color name="colorAccent">#55b9f3</color>
+
 <!--    <color name="shadow_light_color">#4C4E53</color>-->
 <!--    <color name="shadow_dark_color">#202225</color>-->
+
+
+    <color name="background_color_50">#50FFFFFF</color>
+    <color name="background_color_60">#40FFFFFF</color>
+    <color name="statusBarColor">#6293CF</color>
+
+
 </resources>

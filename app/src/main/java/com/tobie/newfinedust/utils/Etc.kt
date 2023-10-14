@@ -3,6 +3,7 @@ package com.tobie.newfinedust.utils
 import android.location.Address
 import android.util.Log
 import com.tobie.newfinedust.viewmodels.MainViewModel
+import kotlin.math.max
 
 class Etc {
     companion object{
@@ -31,6 +32,42 @@ class Etc {
                     }
                 }
             return returnAddress
+        }
+
+
+        /**
+         * 통합 대기환경지수 계산
+         */
+        fun calculateAtmosphericEnvironment(pm10: Int, pm25: Int): String {
+            val pm10Rating = when (pm10) {
+                0 -> 0 //측정 불가
+                in 1..40 -> 1 //좋음
+                in 41 .. 50 -> 2 //보통
+                in 51 .. 75 -> 3 //나쁨
+                in 76 .. 150 -> 4 //매우 나쁨
+                else  // 151이상
+                -> 5 // 최악
+            }
+
+            val pm25Rating = when (pm25) {
+                0 -> 0 //측정 불가
+                in 1..20 -> 1 //좋음
+                in 21 .. 25-> 2 //보통
+                in 26 .. 37 -> 3 //나쁜
+                in 38 .. 75 -> 4 //매우 나쁨
+                else  //76 이상
+                -> 5
+            }
+
+            return when(max(pm10Rating, pm25Rating)) {
+                0 -> "측정 불가"
+                1 -> "좋음"
+                2 -> "보통"
+                3 -> "나쁨"
+                4 -> "매우 나쁨"
+                5 -> "최악"
+                else -> "알수 없음"
+            }
         }
     }
 }
