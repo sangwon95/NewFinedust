@@ -81,6 +81,28 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
         }
     }
 
+    /**
+     * 미세먼지 예보통보 조회
+     */
+
+    fun getForecast() {
+        job = viewModelScope.launch {
+            try {
+                val response = repository.getForecast("2023-10-15")
+
+                withContext(Dispatchers.IO + exceptionHandler){
+                    if(response.isSuccessful){
+                        // _dustValue.postValue(response.body()!!.response.dustBody.dustItem!![0])
+                    } else {
+                        Log.d(TAG+ "Error", response.body().toString())
+                        onError("Error : ${response.message()} ")
+                    }
+                }
+            } catch (e: Exception){
+
+            }
+        }
+    }
 
     /**
      * 에어코리아 API를 통해서 Tmx, Tmy 값을 가져온다.

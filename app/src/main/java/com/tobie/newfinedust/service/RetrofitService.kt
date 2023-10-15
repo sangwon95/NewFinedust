@@ -72,6 +72,18 @@ interface RetrofitService {
         @Query("tmY") tmY: String,
     ): Response<Station>
 
+    /**
+     * 미세먼지 예보정보 조회
+     */
+    @GET("/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${BuildConfig.API_KEY}")
+    suspend fun getForecast(
+        @Query("returnType") returnType: String,
+        @Query("searchDate") searchDate: String,
+        @Query("numOfRows") numOfRows: Int,
+        @Query("pageNo") pageNo: Int
+    ): Response<Station> //여기서부터 수정해야됨
+
+
 //    @GET("posts/1")
 //    fun getStudent(@Query("school_id") schoolId: Int,
 //                   @Query("grade") grade: Int,
