@@ -16,6 +16,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.tobie.newfinedust.adapter.ViewPager2Adapter
 import com.tobie.newfinedust.databinding.ActivityMainBinding
+import com.tobie.newfinedust.models.DustCombinedData
 import com.tobie.newfinedust.models.DustItem
 import com.tobie.newfinedust.service.RetrofitService
 import com.tobie.newfinedust.utils.Constants
@@ -105,30 +106,29 @@ class MainActivity : AppCompatActivity(), OnClickListener {
 
 
         // 미세먼지 수치 수신
-        viewModel.dustValue.observe(this) {
+        viewModel.dustCombinedData.observe(this) {
             Log.d(TAG, it.toString())
-            var dustItemList: ArrayList<DustItem> = arrayListOf(it, it, it)
+            var dustCombinedItemList: ArrayList<DustCombinedData> = arrayListOf(it, it, it)
 
             // ViewPager2
-            adapter = ViewPager2Adapter(dustItemList, this, address)
+            adapter = ViewPager2Adapter(dustCombinedItemList, this, address)
             binding.viewPager2.adapter = adapter // 어뎁터 생성
             binding.viewPager2.orientation = ViewPager2.ORIENTATION_HORIZONTAL // 가로 방향 스크롤
         }
 
 
-        // station 수신
+        //station 수신
         viewModel.stationValue.observe(this) {
             Log.d(TAG, "관측소: $it")
             viewModel.getFineDust(stationName = it)
         }
 
-
-        // 에러 observe
+        //에러 observe
         viewModel.errorMessage.observe(this) {
             Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
         }
 
-        // 로딩 observe
+        //로딩 observe
         viewModel.loading.observe(this) {
             if (it) {
                // binding.progressDialog.visibility = View.VISIBLE
@@ -138,8 +138,8 @@ class MainActivity : AppCompatActivity(), OnClickListener {
         }
 
         // 에어코리아 api를 통해 미세먼지 데이터를 가져온다.
-//        viewModel.getFineDust(stationName = "증평읍")
-//        viewModel.getStationName("232285.907431","321797.554715")
+        // viewModel.getFineDust(stationName = "증평읍")
+        // viewModel.getStationName("232285.907431","321797.554715")
     }
 
 
