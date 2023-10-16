@@ -40,7 +40,7 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
         onError("Exception handled: ${throwable.localizedMessage}")
     }
 
-    private val _dustValue = MutableLiveData<DustItem>()
+    private val _dustCombinedData = MutableLiveData<DustCombinedData>()
     private val _tmxyValue = MutableLiveData<List<TmxyItem>>()
     private val _stationValue = MutableLiveData<String>()
     private val _address = MutableLiveData<String>()
@@ -48,7 +48,7 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     val loading = MutableLiveData<Boolean>()
     val errorMessage = MutableLiveData<String>()
 
-    val dustValue: MutableLiveData<DustItem> get() = _dustValue
+    val dustCombinedData: MutableLiveData<DustCombinedData> get() = _dustCombinedData
     val tmxyValue: MutableLiveData<List<TmxyItem>> get() = _tmxyValue
     val stationValue: MutableLiveData<String> get() = _stationValue
     val address: MutableLiveData<String> get() = _address
@@ -61,21 +61,27 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
         job = viewModelScope.launch {
             try {
                 val fineDustRequestData = FineDustRequestData(stationName= stationName)
-                val response = repository.getFineDust(fineDustRequestData)
+                val responseDust = repository.getFineDust(fineDustRequestData) //미세먼지 정보
+                val responseForecast = repository.getForecast("2023-10-16")// 예보정보
+                val isDustCombinedResponse = responseDust.isSuccessful && responseForecast.isSuccessful
 
                 withContext(Dispatchers.IO + exceptionHandler) {
-                    if (response.isSuccessful) {
-                        _dustValue.postValue(response.body()!!.response.dustBody.dustItem!![0])
+                    if (isDustCombinedResponse) {
+                        val dustCombinedData = DustCombinedData(
+                            dustItem = responseDust.body()!!.response.dustBody.dustItem!![0],
+                            forecastItem = responseForecast.body()!!.response.forecastBody.forecastItem!![0]
+                        )
+                        _dustCombinedData.postValue(dustCombinedData)
 
                         loading.postValue(false)
                     } else {
-                        Log.d(TAG+ "Error", response.body().toString())
-                        onError("Error : ${response.message()} ")
+                        Log.d(TAG+ "Error", "미세먼지 정보, 예보를 불러오지 못했습니다.")
+                        onError("미세먼지 정보, 예보를 불러오지 못했습니다.")
                     }
                 }
             }
             catch (e: Exception) {
-                Log.e(TAG+ "Exception Error:", e.toString())
+                Log.e(TAG + "Exception Error:", e.toString())
                 // Show AlertDialog..
             }
         }
@@ -85,24 +91,24 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
      * 미세먼지 예보통보 조회
      */
 
-    fun getForecast() {
-        job = viewModelScope.launch {
-            try {
-                val response = repository.getForecast("2023-10-15")
-
-                withContext(Dispatchers.IO + exceptionHandler){
-                    if(response.isSuccessful){
-                        // _dustValue.postValue(response.body()!!.response.dustBody.dustItem!![0])
-                    } else {
-                        Log.d(TAG+ "Error", response.body().toString())
-                        onError("Error : ${response.message()} ")
-                    }
-                }
-            } catch (e: Exception){
-
-            }
-        }
-    }
+//    fun getForecast() {
+//        job = viewModelScope.launch {
+//            try {
+//                val response = repository.getForecast("2023-10-16")
+//
+//                withContext(Dispatchers.IO + exceptionHandler){
+//                    if(response.isSuccessful){
+//                        _forecastValue.postValue(response.body()!!.response.forecastBody.forecastItem!![0])
+//                    } else {
+//                        Log.d(TAG+ "Error", response.body().toString())
+//                        onError("Error : ${response.message()} ")
+//                    }
+//                }
+//            } catch (e: Exception){
+//
+//            }
+//        }
+//    }
 
     /**
      * 에어코리아 API를 통해서 Tmx, Tmy 값을 가져온다.

@@ -3,9 +3,7 @@ package com.tobie.newfinedust.service
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.tobie.newfinedust.BuildConfig
-import com.tobie.newfinedust.models.Dust
-import com.tobie.newfinedust.models.Station
-import com.tobie.newfinedust.models.Tmxy
+import com.tobie.newfinedust.models.*
 import com.tobie.newfinedust.utils.Constants
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -75,13 +73,13 @@ interface RetrofitService {
     /**
      * 미세먼지 예보정보 조회
      */
-    @GET("/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${BuildConfig.API_KEY}")
+    @GET("/B552584/ArpltnInforInqireSvc/getMinuDustFrcstDspth?serviceKey=${BuildConfig.API_KEY}")
     suspend fun getForecast(
         @Query("returnType") returnType: String,
         @Query("searchDate") searchDate: String,
         @Query("numOfRows") numOfRows: Int,
         @Query("pageNo") pageNo: Int
-    ): Response<Station> //여기서부터 수정해야됨
+    ): Response<Forecast>
 
 
 //    @GET("posts/1")

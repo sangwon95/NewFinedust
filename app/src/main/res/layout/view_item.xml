@@ -236,6 +236,7 @@
                     app:layout_constraintTop_toBottomOf="@+id/view">
 
                     <TextView
+                        android:id="@+id/tv_forecastDate"
                         android:layout_width="100dp"
                         android:layout_height="match_parent"
                         android:text="2023-10-13"
@@ -244,6 +245,7 @@
                         />
 
                     <TextView
+                        android:id="@+id/tv_forecastContent"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:text="[미세먼지] 전 권역이 '좋음'~'보틍으로 예상됩니다.\n\n [미세먼지] 원활한 대기 확산으로 대기질이 대체로 '보통'수준일 것으로 예상됩니다."
