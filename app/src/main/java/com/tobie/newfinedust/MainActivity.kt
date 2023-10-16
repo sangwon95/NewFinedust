@@ -1,7 +1,9 @@
 package com.tobie.newfinedust
 
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.os.AsyncTask
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -18,6 +20,8 @@ import com.tobie.newfinedust.adapter.ViewPager2Adapter
 import com.tobie.newfinedust.databinding.ActivityMainBinding
 import com.tobie.newfinedust.models.DustCombinedData
 import com.tobie.newfinedust.models.DustItem
+import com.tobie.newfinedust.room.RegionDatabase
+import com.tobie.newfinedust.room.RegionEntity
 import com.tobie.newfinedust.service.RetrofitService
 import com.tobie.newfinedust.utils.Constants
 import com.tobie.newfinedust.viewmodels.MainViewModel
@@ -42,6 +46,7 @@ import kotlin.collections.ArrayList
  *
  *
  */
+@Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity(), OnClickListener {
 
     companion object {
@@ -52,6 +57,10 @@ class MainActivity : AppCompatActivity(), OnClickListener {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: MainViewModel
     private lateinit var adapter: ViewPager2Adapter
+
+    //local database(Room)
+    lateinit var db: RegionDatabase
+    var regionList = listOf<RegionEntity>()
 
     private var address: ArrayList<String> = arrayListOf("송강동", "관평동", "전민동")
 
@@ -71,10 +80,11 @@ class MainActivity : AppCompatActivity(), OnClickListener {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        //local database
+        db = RegionDatabase.getInstance(this)!!
+
         // Add Button
         // binding.button.setOnClickListener(this)
-
-
     }
 
 
@@ -211,5 +221,34 @@ class MainActivity : AppCompatActivity(), OnClickListener {
         when(view){
            // binding.button -> update()
         }
+    }
+
+
+    @SuppressLint("StaticFieldLeak")
+    fun insertRegion(){
+        var region =  RegionEntity(null, "관평동")
+        val insertTask = object : AsyncTask<Unit,Unit,Unit>(){
+            @Deprecated("Deprecated in Java", ReplaceWith("db.regionDAO().insert(region)"))
+            override fun doInBackground(vararg params: Unit?) {
+                db.regionDAO().insert(region)
+            }
+
+            @Deprecated("Deprecated in Java")
+            override fun onPostExecute(result: Unit?) {
+                super.onPostExecute(result)
+                getAllRegion()
+            }
+        }
+
+
+
+    }
+
+    fun getAllRegion(){
+
+    }
+
+    fun deleteRegion(){
+
     }
 }
