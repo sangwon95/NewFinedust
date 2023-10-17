@@ -62,7 +62,7 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
             try {
                 val fineDustRequestData = FineDustRequestData(stationName= stationName)
                 val responseDust = repository.getFineDust(fineDustRequestData) //미세먼지 정보
-                val responseForecast = repository.getForecast("2023-10-16")// 예보정보
+                val responseForecast = repository.getForecast("2023-10-17")// 예보정보
                 val isDustCombinedResponse = responseDust.isSuccessful && responseForecast.isSuccessful
 
                 withContext(Dispatchers.IO + exceptionHandler) {

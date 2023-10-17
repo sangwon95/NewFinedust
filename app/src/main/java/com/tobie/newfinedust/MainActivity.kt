@@ -22,6 +22,7 @@ import com.tobie.newfinedust.models.DustCombinedData
 import com.tobie.newfinedust.models.DustItem
 import com.tobie.newfinedust.room.RegionDatabase
 import com.tobie.newfinedust.room.RegionEntity
+import com.tobie.newfinedust.room.RoomListener
 import com.tobie.newfinedust.service.RetrofitService
 import com.tobie.newfinedust.utils.Constants
 import com.tobie.newfinedust.viewmodels.MainViewModel
@@ -46,8 +47,12 @@ import kotlin.collections.ArrayList
  *
  *
  */
-@Suppress("DEPRECATION")
-class MainActivity : AppCompatActivity(), OnClickListener {
+
+/**
+ * TODO 미세먼지 예보불러올때 timeout error issue
+ * TODO adapter에서 클릭 이벤트 연결해야됨
+ */
+class MainActivity : AppCompatActivity(), OnClickListener, RoomListener {
 
     companion object {
         const val TAG: String = "MainActivity - 로그"
@@ -225,7 +230,7 @@ class MainActivity : AppCompatActivity(), OnClickListener {
 
 
     @SuppressLint("StaticFieldLeak")
-    fun insertRegion(){
+    fun insertRegion() {
         var region =  RegionEntity(null, "관평동")
         val insertTask = object : AsyncTask<Unit,Unit,Unit>(){
             @Deprecated("Deprecated in Java", ReplaceWith("db.regionDAO().insert(region)"))
@@ -240,15 +245,48 @@ class MainActivity : AppCompatActivity(), OnClickListener {
             }
         }
 
-
-
+        insertTask.execute()
     }
 
-    fun getAllRegion(){
+    @SuppressLint("StaticFieldLeak")
+    fun getAllRegion() {
+        val getTask = object : AsyncTask<Unit, Unit, Unit>(){
+            @Deprecated("Deprecated in Java", ReplaceWith("regionList = db.regionDAO().getAll()"))
+            override fun doInBackground(vararg params: Unit?) {
+                regionList = db.regionDAO().getAll()
+                Log.i(TAG, "저장된 지역: ${regionList[0]}")
+            }
 
+            override fun onPostExecute(result: Unit?) {
+                super.onPostExecute(result)
+
+            }
+        }
+        getTask.execute()
     }
 
+    @SuppressLint("StaticFieldLeak")
     fun deleteRegion(){
+        var region =  RegionEntity(null, "관평동")
+        val deleteTask =  object : AsyncTask<Unit, Unit, Unit>(){
+            @Deprecated("Deprecated in Java", ReplaceWith("regionList = db.regionDAO().getAll()"))
+            override fun doInBackground(vararg params: Unit?) {
+                db.regionDAO().delete(region)
+            }
 
+            override fun onPostExecute(result: Unit?) {
+                super.onPostExecute(result)
+
+            }
+        }
+        deleteTask.execute()
+    }
+
+    override fun onInsertListener(region: RegionEntity) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onGetAllListener() {
+        TODO("Not yet implemented")
     }
 }
