@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
 }
 // local.properties 사용을 위함
 Properties properties = new Properties()
@@ -46,7 +47,7 @@ dependencies {
     // room database
     def room_version = "2.5.0"
     implementation "androidx.room:room-runtime:$room_version"
-    annotationProcessor "androidx.room:room-compiler:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
 
 
     // Jetpack 라이브러리

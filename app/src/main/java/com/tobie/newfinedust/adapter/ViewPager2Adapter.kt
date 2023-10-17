@@ -1,8 +1,10 @@
 package com.tobie.newfinedust.adapter
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.graphics.PorterDuff
+import android.os.AsyncTask
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -11,11 +13,14 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.tobie.newfinedust.MainActivity
 import com.tobie.newfinedust.R
 import com.tobie.newfinedust.models.Dust
 import com.tobie.newfinedust.models.DustCombinedData
 import com.tobie.newfinedust.models.DustItem
 import com.tobie.newfinedust.models.Remain
+import com.tobie.newfinedust.room.RegionDatabase
+import com.tobie.newfinedust.room.RegionEntity
 import com.tobie.newfinedust.utils.Etc
 import kotlin.math.log
 
@@ -32,12 +37,24 @@ class ViewPager2Adapter(dustCombinedItemList: ArrayList<DustCombinedData>,
     override fun onBindViewHolder(holder: PagerViewHolder, position: Int) {
         //메인박스(미세, 초미세먼지) UI 적용
         setTextInMainBox(holder, position)
+
+
+
+
+        holder.addIcon.setOnClickListener {
+
+        }
+
+        holder.txtAddress.setOnClickListener {
+
+        }
     }
 
     inner class PagerViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder
         (LayoutInflater.from(parent.context).inflate(R.layout.view_item, parent, false)){
         var recyclerView: RecyclerView = itemView.findViewById(R.id.recyclerView)
 
+        var addIcon: ImageView = itemView.findViewById(R.id.iv_add)
         var txtAddress: TextView = itemView.findViewById(R.id.tv_address)
         var txtState: TextView = itemView.findViewById(R.id.tv_state)
         var txtPm10: TextView = itemView.findViewById(R.id.tv_pm10)
