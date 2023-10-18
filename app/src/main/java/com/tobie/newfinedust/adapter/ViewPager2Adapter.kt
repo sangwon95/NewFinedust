@@ -21,12 +21,14 @@ import com.tobie.newfinedust.models.DustItem
 import com.tobie.newfinedust.models.Remain
 import com.tobie.newfinedust.room.RegionDatabase
 import com.tobie.newfinedust.room.RegionEntity
+import com.tobie.newfinedust.room.RoomListener
 import com.tobie.newfinedust.utils.Etc
 import kotlin.math.log
 
 class ViewPager2Adapter(dustCombinedItemList: ArrayList<DustCombinedData>,
                         var context: Context,
-                        var address: ArrayList<String>
+                        var address: ArrayList<String>,
+                        private val roomListener: RoomListener,
 ) : RecyclerView.Adapter<ViewPager2Adapter.PagerViewHolder>() {
     var mDustCombinedItemList = dustCombinedItemList
 
@@ -38,15 +40,12 @@ class ViewPager2Adapter(dustCombinedItemList: ArrayList<DustCombinedData>,
         //메인박스(미세, 초미세먼지) UI 적용
         setTextInMainBox(holder, position)
 
-
-
-
         holder.addIcon.setOnClickListener {
-
+            roomListener.onInsertListener(RegionEntity(null, "관평동"))
         }
 
         holder.txtAddress.setOnClickListener {
-
+            roomListener.onGetAllListener()
         }
     }
 

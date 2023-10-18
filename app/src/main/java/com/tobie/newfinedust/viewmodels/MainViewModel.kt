@@ -16,24 +16,19 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.tobie.newfinedust.MainActivity
 import com.tobie.newfinedust.models.*
+import com.tobie.newfinedust.room.RegionDatabase
 import com.tobie.newfinedust.utils.Etc
 import com.tobie.repository.MainRepository
 import kotlinx.coroutines.*
 import java.util.*
+import kotlin.system.measureTimeMillis
+import kotlin.time.measureTime
 
 /*
 1."Room Data" 조회를 통해서 저장된 지역 데이터가 있는 확인한다.
 2. 리스트 갯수 만큼 에어코리아 API 호출 하여 미세먼지 데이터를 가져온다.
  */
 class MainViewModel(private val repository: MainRepository) : ViewModel() {
-
-    companion object {
-        const val TAG = "MainViewModel - 로그"
-    }
-
-    init {
-        Log.d(TAG, "생성자 호출");
-    }
 
     private var job: Job? = null
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -53,6 +48,14 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     val stationValue: MutableLiveData<String> get() = _stationValue
     val address: MutableLiveData<String> get() = _address
 
+    companion object {
+        const val TAG = "MainViewModel - 로그"
+    }
+
+    init {
+        Log.d(TAG, "생성자 호출");
+    }
+
 
     /**
      * 에어코리아 API를 통해서 미세먼지 수치(데이터)를 가져온다.
@@ -60,16 +63,16 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     fun getFineDust(stationName: String) {
         job = viewModelScope.launch {
             try {
-                val fineDustRequestData = FineDustRequestData(stationName= stationName)
-                val responseDust = repository.getFineDust(fineDustRequestData) //미세먼지 정보
-                val responseForecast = repository.getForecast("2023-10-17")// 예보정보
-                val isDustCombinedResponse = responseDust.isSuccessful && responseForecast.isSuccessful
+                    val fineDustRequestData = FineDustRequestData(stationName= stationName)
+                    val responseDust = async { repository.getFineDust(fineDustRequestData) } //미세먼지 정보
+                    val responseForecast = async { repository.getForecast("2023-10-18") } //예보정보
+                    val isDustCombinedResponse = responseDust.await().isSuccessful && responseForecast.await().isSuccessful
 
                 withContext(Dispatchers.IO + exceptionHandler) {
                     if (isDustCombinedResponse) {
                         val dustCombinedData = DustCombinedData(
-                            dustItem = responseDust.body()!!.response.dustBody.dustItem!![0],
-                            forecastItem = responseForecast.body()!!.response.forecastBody.forecastItem!![0]
+                            dustItem = responseDust.await().body()!!.response.dustBody.dustItem!![0],
+                            forecastItem = responseForecast.await().body()!!.response.forecastBody.forecastItem!![0]
                         )
                         _dustCombinedData.postValue(dustCombinedData)
 
@@ -87,28 +90,6 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
         }
     }
 
-    /**
-     * 미세먼지 예보통보 조회
-     */
-
-//    fun getForecast() {
-//        job = viewModelScope.launch {
-//            try {
-//                val response = repository.getForecast("2023-10-16")
-//
-//                withContext(Dispatchers.IO + exceptionHandler){
-//                    if(response.isSuccessful){
-//                        _forecastValue.postValue(response.body()!!.response.forecastBody.forecastItem!![0])
-//                    } else {
-//                        Log.d(TAG+ "Error", response.body().toString())
-//                        onError("Error : ${response.message()} ")
-//                    }
-//                }
-//            } catch (e: Exception){
-//
-//            }
-//        }
-//    }
 
     /**
      * 에어코리아 API를 통해서 Tmx, Tmy 값을 가져온다.
