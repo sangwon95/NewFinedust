@@ -29,6 +29,9 @@ import com.tobie.newfinedust.viewmodels.MainViewModel
 import com.tobie.newfinedust.viewmodels.MainViewModelFactory
 import com.tobie.repository.MainRepository
 import eightbitlab.com.blurview.RenderScriptBlur
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.collections.ArrayList
 
 /**
@@ -63,33 +66,26 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener {
     private lateinit var viewModel: MainViewModel
     private lateinit var adapter: ViewPager2Adapter
 
-    //local database(Room)
-    lateinit var db: RegionDatabase
+    //Room Database
+    lateinit var roomDB: RegionDatabase
     var regionList = listOf<RegionEntity>()
 
+    //임이의 지역 리스트
     private var address: ArrayList<String> = arrayListOf("송강동", "관평동", "전민동")
-
-    //private var data: ArrayList<Int> = arrayListOf(1, 2, 3)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // ViewModel
-        configureMainViewModel()
-
-        // 위치 권한 퍼미션 확인
-        checkPermission()
 
         // view binding
         // 자동으로 완성된 액티비티 메인 바인딩 클스 인스턴스를 가져온다.
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        //local database
-        db = RegionDatabase.getInstance(this)!!
+        configureMainViewModel() // ViewModel
 
-        // Add Button
-        // binding.button.setOnClickListener(this)
+        checkPermission() //위치 권한 퍼미션 확인
+
+        roomDB = RegionDatabase.getInstance(this)!! //Room Database 초기화
     }
 
 
@@ -126,7 +122,7 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener {
             var dustCombinedItemList: ArrayList<DustCombinedData> = arrayListOf(it, it, it)
 
             // ViewPager2
-            adapter = ViewPager2Adapter(dustCombinedItemList, this, address)
+            adapter = ViewPager2Adapter(dustCombinedItemList, this, address, this)
             binding.viewPager2.adapter = adapter // 어뎁터 생성
             binding.viewPager2.orientation = ViewPager2.ORIENTATION_HORIZONTAL // 가로 방향 스크롤
         }
@@ -192,7 +188,6 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
         when (requestCode) {
             LOCATION_PERMISSION_REQUEST_CODE -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -231,62 +226,34 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener {
 
     @SuppressLint("StaticFieldLeak")
     fun insertRegion() {
-        var region =  RegionEntity(null, "관평동")
-        val insertTask = object : AsyncTask<Unit,Unit,Unit>(){
-            @Deprecated("Deprecated in Java", ReplaceWith("db.regionDAO().insert(region)"))
-            override fun doInBackground(vararg params: Unit?) {
-                db.regionDAO().insert(region)
-            }
-
-            @Deprecated("Deprecated in Java")
-            override fun onPostExecute(result: Unit?) {
-                super.onPostExecute(result)
-                getAllRegion()
-            }
+        var job = CoroutineScope(Dispatchers.IO).launch{
+            val region =  RegionEntity(null, "관평동")
+            roomDB.regionDAO().insert(region)
         }
-
-        insertTask.execute()
     }
 
     @SuppressLint("StaticFieldLeak")
     fun getAllRegion() {
-        val getTask = object : AsyncTask<Unit, Unit, Unit>(){
-            @Deprecated("Deprecated in Java", ReplaceWith("regionList = db.regionDAO().getAll()"))
-            override fun doInBackground(vararg params: Unit?) {
-                regionList = db.regionDAO().getAll()
-                Log.i(TAG, "저장된 지역: ${regionList[0]}")
-            }
-
-            override fun onPostExecute(result: Unit?) {
-                super.onPostExecute(result)
-
-            }
+        var job = CoroutineScope(Dispatchers.IO).launch {
+            regionList = roomDB.regionDAO().getAll()
+            Log.i(TAG, "저장된 지역: ${regionList[0]}")
         }
-        getTask.execute()
     }
 
-    @SuppressLint("StaticFieldLeak")
     fun deleteRegion(){
-        var region =  RegionEntity(null, "관평동")
-        val deleteTask =  object : AsyncTask<Unit, Unit, Unit>(){
-            @Deprecated("Deprecated in Java", ReplaceWith("regionList = db.regionDAO().getAll()"))
-            override fun doInBackground(vararg params: Unit?) {
-                db.regionDAO().delete(region)
-            }
-
-            override fun onPostExecute(result: Unit?) {
-                super.onPostExecute(result)
-
-            }
+        var job = CoroutineScope(Dispatchers.IO).launch {
+            var region =  RegionEntity(null, "관평동")
+            roomDB.regionDAO().delete(region)
         }
-        deleteTask.execute()
     }
 
     override fun onInsertListener(region: RegionEntity) {
-        TODO("Not yet implemented")
+        insertRegion()
+        Log.d(TAG, "onInsertListener 실행")
     }
 
     override fun onGetAllListener() {
-        TODO("Not yet implemented")
+        getAllRegion()
+        Log.d(TAG, "onGetAllListener 실행")
     }
 }
