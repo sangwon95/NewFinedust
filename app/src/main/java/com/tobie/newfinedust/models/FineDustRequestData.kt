@@ -7,7 +7,7 @@ import com.tobie.newfinedust.BuildConfig
  * GET Query Data class
  */
 data class FineDustRequestData(
-    val serviceKey: String = BuildConfig.API_KEY,
+    val serviceKey: String = BuildConfig.AIR_API_KEY,
     val returnType: String = "json",
     val numOfRows: Int = 1,
     val pageNo: Int = 1,

@@ -12,7 +12,8 @@ class Constants {
     companion object{
         const val APP_NAME = "My App"
        //const val API_BASE_URl ="http://onwards.iptime.org:50003"
-       const val API_BASE_URl ="http://apis.data.go.kr"
+       const val AIR_API_BASE_URl ="http://apis.data.go.kr"
+       const val VWORLD_API_BASE_URl ="https://api.vworld.kr"
 
         const val FINE_LOCATION = android.Manifest.permission.ACCESS_FINE_LOCATION
         const val COARSE_LOCATION = android.Manifest.permission.ACCESS_COARSE_LOCATION

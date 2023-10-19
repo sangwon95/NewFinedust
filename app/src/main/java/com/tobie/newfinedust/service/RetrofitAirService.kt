@@ -11,32 +11,31 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface RetrofitService {
+interface RetrofitAirService {
 
     companion object {
-        private var retrofitService: RetrofitService? = null
+        private var retrofitAirService: RetrofitAirService? = null
 
         var gson: Gson = GsonBuilder()
             .setLenient()
             .create()
 
-        fun getInstance() : RetrofitService {
-            if (retrofitService == null) {
+        fun getInstance() : RetrofitAirService {
+            if (retrofitAirService == null) {
                 val retrofit = Retrofit.Builder()
-                    .baseUrl(Constants.API_BASE_URl)
+                    .baseUrl(Constants.AIR_API_BASE_URl)
                     .addConverterFactory(GsonConverterFactory.create(gson))
                     .build()
-                retrofitService = retrofit.create(RetrofitService::class.java)
+                retrofitAirService = retrofit.create(RetrofitAirService::class.java)
             }
-            return retrofitService!!
+            return retrofitAirService!!
         }
-
     }
 
     /**
      * 관측정소별 실시간 측정정보 조회
      */
-    @GET("/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${BuildConfig.API_KEY}")
+    @GET("/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${BuildConfig.AIR_API_KEY}")
     suspend fun getFineDust(
         @Query("stationName") stationName: String,
         @Query("returnType") returnType: String,
@@ -51,7 +50,7 @@ interface RetrofitService {
      * 주소 검색 기반 tmx, tmy 값 구하기
      * umdName: ex) 대전광역시 유성구 장동 -> 전부
      */
-    @GET("/B552584/MsrstnInfoInqireSvc/getTMStdrCrdnt?serviceKey=${BuildConfig.API_KEY}")
+    @GET("/B552584/MsrstnInfoInqireSvc/getTMStdrCrdnt?serviceKey=${BuildConfig.AIR_API_KEY}")
     suspend fun getTmxy(
         @Query("returnType") returnType: String,
         @Query("numOfRows") numOfRows: Int,
@@ -63,7 +62,7 @@ interface RetrofitService {
     /**
      * 근접측정소 목록 조회
      */
-    @GET("/B552584/MsrstnInfoInqireSvc/getNearbyMsrstnList?serviceKey=${BuildConfig.API_KEY}")
+    @GET("/B552584/MsrstnInfoInqireSvc/getNearbyMsrstnList?serviceKey=${BuildConfig.AIR_API_KEY}")
     suspend fun getStation(
         @Query("returnType") returnType: String,
         @Query("tmX") tmX: String,
@@ -73,13 +72,14 @@ interface RetrofitService {
     /**
      * 미세먼지 예보정보 조회
      */
-    @GET("/B552584/ArpltnInforInqireSvc/getMinuDustFrcstDspth?serviceKey=${BuildConfig.API_KEY}")
+    @GET("/B552584/ArpltnInforInqireSvc/getMinuDustFrcstDspth?serviceKey=${BuildConfig.AIR_API_KEY}")
     suspend fun getForecast(
         @Query("returnType") returnType: String,
         @Query("searchDate") searchDate: String,
         @Query("numOfRows") numOfRows: Int,
         @Query("pageNo") pageNo: Int
     ): Response<Forecast>
+
 
 
 //    @GET("posts/1")
