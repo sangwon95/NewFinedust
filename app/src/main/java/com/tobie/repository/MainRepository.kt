@@ -3,9 +3,9 @@ package com.tobie.repository
 import com.tobie.newfinedust.models.FineDustRequestData
 import com.tobie.newfinedust.models.StationData
 import com.tobie.newfinedust.models.TmxyData
-import com.tobie.newfinedust.service.RetrofitService
+import com.tobie.newfinedust.service.RetrofitAirService
 
-class MainRepository constructor(private val retrofitService: RetrofitService) {
+class MainRepository constructor(private val retrofitService: RetrofitAirService) {
 
     suspend fun getFineDust(fineDustRequestData: FineDustRequestData)
             = retrofitService.getFineDust(
@@ -20,7 +20,8 @@ class MainRepository constructor(private val retrofitService: RetrofitService) {
     /**
      * 미세먼지 예보정보 가져오기
      */
-    suspend fun getForecast(searchDate: String) = retrofitService.getForecast(
+    suspend fun getForecast(searchDate: String)
+    = retrofitService.getForecast(
         "json",
         searchDate,
         1,

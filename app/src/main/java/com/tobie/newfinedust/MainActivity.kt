@@ -1,6 +1,7 @@
 package com.tobie.newfinedust
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.AsyncTask
@@ -8,7 +9,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.View.OnClickListener
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -19,16 +19,15 @@ import androidx.viewpager2.widget.ViewPager2
 import com.tobie.newfinedust.adapter.ViewPager2Adapter
 import com.tobie.newfinedust.databinding.ActivityMainBinding
 import com.tobie.newfinedust.models.DustCombinedData
-import com.tobie.newfinedust.models.DustItem
+import com.tobie.newfinedust.models.IntentListener
 import com.tobie.newfinedust.room.RegionDatabase
 import com.tobie.newfinedust.room.RegionEntity
 import com.tobie.newfinedust.room.RoomListener
-import com.tobie.newfinedust.service.RetrofitService
+import com.tobie.newfinedust.service.RetrofitAirService
 import com.tobie.newfinedust.utils.Constants
 import com.tobie.newfinedust.viewmodels.MainViewModel
 import com.tobie.newfinedust.viewmodels.MainViewModelFactory
 import com.tobie.repository.MainRepository
-import eightbitlab.com.blurview.RenderScriptBlur
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -55,7 +54,7 @@ import kotlin.collections.ArrayList
  * TODO 미세먼지 예보불러올때 timeout error issue
  * TODO adapter에서 클릭 이벤트 연결해야됨
  */
-class MainActivity : AppCompatActivity(), OnClickListener, RoomListener {
+class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentListener {
 
     companion object {
         const val TAG: String = "MainActivity - 로그"
@@ -70,7 +69,7 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener {
     lateinit var roomDB: RegionDatabase
     var regionList = listOf<RegionEntity>()
 
-    //임이의 지역 리스트
+    //임의의 지역 리스트
     private var address: ArrayList<String> = arrayListOf("송강동", "관평동", "전민동")
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,6 +85,8 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener {
         checkPermission() //위치 권한 퍼미션 확인
 
         roomDB = RegionDatabase.getInstance(this)!! //Room Database 초기화
+
+
     }
 
 
@@ -93,7 +94,7 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener {
      * 메인 액티비티 뷰모델 구성
      */
     private fun configureMainViewModel() {
-        val retrofitService = RetrofitService.getInstance()
+        val retrofitService = RetrofitAirService.getInstance()
         val mainRepository = MainRepository(retrofitService)
 
         // MainViewModelFactory: MainViewModel을 통해 전달되는 인자가 있을때 사용됩니다.
@@ -122,7 +123,7 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener {
             var dustCombinedItemList: ArrayList<DustCombinedData> = arrayListOf(it, it, it)
 
             // ViewPager2
-            adapter = ViewPager2Adapter(dustCombinedItemList, this, address, this)
+            adapter = ViewPager2Adapter(dustCombinedItemList, this, address, this, this)
             binding.viewPager2.adapter = adapter // 어뎁터 생성
             binding.viewPager2.orientation = ViewPager2.ORIENTATION_HORIZONTAL // 가로 방향 스크롤
         }
@@ -255,5 +256,10 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener {
     override fun onGetAllListener() {
         getAllRegion()
         Log.d(TAG, "onGetAllListener 실행")
+    }
+
+    override fun doIntentListener() {
+        val intent = Intent(this, SearchActivity::class.java)
+        startActivity(intent)
     }
 }

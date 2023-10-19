@@ -2,6 +2,7 @@ package com.tobie.newfinedust.adapter
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.os.AsyncTask
@@ -11,14 +12,13 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.tobie.newfinedust.MainActivity
 import com.tobie.newfinedust.R
-import com.tobie.newfinedust.models.Dust
-import com.tobie.newfinedust.models.DustCombinedData
-import com.tobie.newfinedust.models.DustItem
-import com.tobie.newfinedust.models.Remain
+import com.tobie.newfinedust.SearchActivity
+import com.tobie.newfinedust.models.*
 import com.tobie.newfinedust.room.RegionDatabase
 import com.tobie.newfinedust.room.RegionEntity
 import com.tobie.newfinedust.room.RoomListener
@@ -29,6 +29,7 @@ class ViewPager2Adapter(dustCombinedItemList: ArrayList<DustCombinedData>,
                         var context: Context,
                         var address: ArrayList<String>,
                         private val roomListener: RoomListener,
+                        private val intentListener: IntentListener,
 ) : RecyclerView.Adapter<ViewPager2Adapter.PagerViewHolder>() {
     var mDustCombinedItemList = dustCombinedItemList
 
@@ -41,7 +42,9 @@ class ViewPager2Adapter(dustCombinedItemList: ArrayList<DustCombinedData>,
         setTextInMainBox(holder, position)
 
         holder.addIcon.setOnClickListener {
-            roomListener.onInsertListener(RegionEntity(null, "관평동"))
+            //화면전화
+            intentListener.doIntentListener()
+           // roomListener.onInsertListener(RegionEntity(null, "관평동"))
         }
 
         holder.txtAddress.setOnClickListener {

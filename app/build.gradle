@@ -20,7 +20,8 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField "String", "API_KEY", properties['api.key.airkorea']
+        buildConfigField "String", "AIR_API_KEY", properties['api.key.airkorea']
+        buildConfigField "String", "VWORLD_API_KEY", properties['api.key.vworld']
     }
 
     buildTypes {
