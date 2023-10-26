@@ -120,12 +120,12 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
         // 미세먼지 수치 수신
         viewModel.dustCombinedData.observe(this) {
             Log.d(TAG, it.toString())
-            var dustCombinedItemList: ArrayList<DustCombinedData> = arrayListOf(it, it, it)
+            val dustCombinedItemList: ArrayList<DustCombinedData> = arrayListOf(it, it, it)
 
             // ViewPager2
             adapter = ViewPager2Adapter(dustCombinedItemList, this, address, this, this)
             binding.viewPager2.adapter = adapter // 어뎁터 생성
-            binding.viewPager2.orientation = ViewPager2.ORIENTATION_HORIZONTAL // 가로 방향 스크롤
+            binding.viewPager2.orientation = ViewPager2.ORIENTATION_HORIZONTAL // 가로 방향 스크
         }
 
 

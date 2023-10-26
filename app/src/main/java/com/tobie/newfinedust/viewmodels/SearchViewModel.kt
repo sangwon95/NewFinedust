@@ -4,9 +4,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tobie.newfinedust.models.DustCombinedData
-import com.tobie.newfinedust.models.FineDustRequestData
-import com.tobie.newfinedust.models.SubAddressRequestData
+import com.tobie.newfinedust.models.*
 import com.tobie.repository.SearchRepository
 import kotlinx.coroutines.*
 
@@ -27,6 +25,10 @@ class SearchViewModel constructor(private val repository: SearchRepository) : Vi
     val loading = MutableLiveData<Boolean>()
     val errorMessage = MutableLiveData<String>()
 
+    private val _featuresValue = MutableLiveData<List<Feature>>()
+
+    val featuresValue: MutableLiveData<List<Feature>> get() = _featuresValue
+
     /**
      * 에어코리아 API를 통해서 미세먼지 수치(데이터)를 가져온다.
      */
@@ -41,6 +43,8 @@ class SearchViewModel constructor(private val repository: SearchRepository) : Vi
                     if (isResponse) {
                         //_dustCombinedData.postValue(dustCombinedData)
                         Log.d(TAG, responseAddr.await().body().toString())
+                        _featuresValue.postValue(responseAddr.await().body()!!.response.result.featureCollection.features)
+
                         loading.postValue(false)
                     } else {
                         Log.d(MainViewModel.TAG + "Error", "미세먼지 정보, 예보를 불러오지 못했습니다.")

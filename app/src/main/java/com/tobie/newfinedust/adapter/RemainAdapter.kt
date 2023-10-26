@@ -9,7 +9,7 @@ import com.tobie.newfinedust.R
 import com.tobie.newfinedust.models.Remain
 
 class RemainAdapter(remainList: ArrayList<Remain>) : RecyclerView.Adapter<RemainAdapter.ViewHolder>() {
-    var dataList: ArrayList<Remain> = remainList
+    private var dataList: ArrayList<Remain> = remainList
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val txtTitle: TextView = view.findViewById(R.id.tv_title)
