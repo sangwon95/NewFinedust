@@ -112,11 +112,6 @@ class SearchActivity : AppCompatActivity(), AddressClickListener {
         viewModel.featuresValue.observe(this) {
             Log.d(TAG+"테스트", it.toString())
             featureList = it
-
-            Log.d(TAG, "가져온 주소 갯수:${featureList?.size}")
-            for(value in featureList!!){
-                Log.d(TAG, "가져온 주소:${value.properties.full_nm}!!")
-            }
             adapter.update(featureList)
             // 리스트 중간선 설정
 //            val dividerItemDecoration = DividerItemDecoration(this, LinearLayout.VERTICAL)
