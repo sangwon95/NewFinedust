@@ -25,9 +25,12 @@ class SearchViewModel constructor(private val repository: SearchRepository) : Vi
     val loading = MutableLiveData<Boolean>()
     val errorMessage = MutableLiveData<String>()
 
-    private val _featuresValue = MutableLiveData<List<Feature>>()
+    private val _featuresValue = MutableLiveData<ArrayList<Feature>>()
+    private val _errorValue = MutableLiveData<Boolean>()
 
-    val featuresValue: MutableLiveData<List<Feature>> get() = _featuresValue
+    val featuresValue: MutableLiveData<ArrayList<Feature>> get() = _featuresValue
+
+    val errorValue: MutableLiveData<Boolean> get() = _errorValue
 
     /**
      * 에어코리아 API를 통해서 미세먼지 수치(데이터)를 가져온다.
@@ -53,6 +56,7 @@ class SearchViewModel constructor(private val repository: SearchRepository) : Vi
                 }
             }
             catch (e: Exception) {
+                _errorValue.postValue(false)
                 Log.e(MainViewModel.TAG + "Exception Error:", e.toString())
                 // Show AlertDialog..
             }

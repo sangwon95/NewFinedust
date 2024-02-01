@@ -2,6 +2,7 @@ package com.tobie.newfinedust.utils
 
 import android.location.Address
 import android.util.Log
+import com.tobie.newfinedust.R
 import com.tobie.newfinedust.viewmodels.MainViewModel
 import kotlin.math.max
 
@@ -11,7 +12,7 @@ class Etc {
          * 위도, 경도로 추출된 주소리스트를 가공하여 보다
          * 정확한 주소를 추출한다.
          */
-        fun translationAddress (addressList: List<Address>) : String{
+        fun translationAddress (addressList: List<Address>) : String {
              var returnAddress = ""
 
                 for(value in addressList){
@@ -67,6 +68,97 @@ class Etc {
                 4 -> "매우 나쁨"
                 5 -> "최악"
                 else -> "알수 없음"
+            }
+        }
+
+        /**
+         * 미세먼지 대기 상태값을 통해 컬러 text를 반환한다.
+         */
+        fun getTextForStatus(status: String): Int {
+            return when(status) {
+                "측정 불가" -> R.drawable.ba_gradient_good
+                "좋음" -> R.drawable.ba_gradient_good
+                "보통" -> R.drawable.ba_gradient_good
+                "나쁨" -> R.drawable.ba_gradient_verybad
+                "매우 나쁨" -> R.drawable.ba_gradient_worst
+                "최악" -> R.drawable.ba_gradient_worst
+                else -> R.drawable.ba_gradient_normal
+            }
+        }
+
+        fun getTextForStatusIconImage(status: String): Int {
+            return when(status) {
+                "측정 불가" -> R.drawable.ic_normal
+                "좋음" -> R.drawable.ic_good
+                "보통" -> R.drawable.ic_normal
+                "나쁨" -> R.drawable.ic_bad
+                "매우 나쁨" -> R.drawable.ic_verybad
+                "최악" -> R.drawable.ic_verybad
+                else -> R.drawable.ic_normal
+            }
+        }
+
+        /**
+         * 이산화 질소 오염도 단계
+         */
+       fun getNo2ValueAirQualityLevel(value: String) : String {
+            return if (value != "-") {
+                when (value.toDouble()) {
+                    in 0.0..0.03 -> "좋음"
+                    in 0.31..0.06 -> "보통"
+                    in 0.061..0.15 -> "나쁨"
+                    else -> "매우 나쁨"
+                }
+            } else {
+                value
+            }
+        }
+
+        /**
+         * 오존 오염도 단계
+         */
+        fun getO3GradeAirQualityLevel(value: String) : String {
+            return if (value != "-") {
+                when (value.toDouble()) {
+                    in 0.0 .. 0.03 -> "좋음"
+                    in 0.031 .. 0.09 -> "보통"
+                    in 0.091 .. 0.15 -> "나쁨"
+                    else -> "매우 나쁨"
+                }
+            } else {
+                value
+            }
+        }
+
+        /**
+         * 일산화탄소 오염도 단계
+         */
+        fun getCoValueAirQualityLevel(value: String) : String {
+            return if (value != "-") {
+                when (value.toDouble()) {
+                    in 0.0 .. 2.0 -> "좋음"
+                    in 2.01 .. 9.0 -> "보통"
+                    in 9.01 .. 15.0 -> "나쁨"
+                    else -> "매우 나쁨"
+                }
+            } else {
+                value
+            }
+        }
+
+        /**
+         * 이황산가스 오염도 단계
+         */
+        fun getSo2ValueAirQualityLevel(value: String) : String {
+            return if (value != "-") {
+                when (value.toDouble()) {
+                    in 0.0 .. 0.02 -> "좋음"
+                    in 0.021 .. 0.05 -> "보통"
+                    in 0.051 .. 0.15 -> "나쁨"
+                    else -> "매우 나쁨"
+                }
+            } else {
+                value
             }
         }
     }

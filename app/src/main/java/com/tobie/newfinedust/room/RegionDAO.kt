@@ -14,4 +14,7 @@ interface RegionDAO {
 
     @Delete
     fun delete(region: RegionEntity)
+
+    @Query("DELETE FROM region")
+    fun deleteAll()
 }

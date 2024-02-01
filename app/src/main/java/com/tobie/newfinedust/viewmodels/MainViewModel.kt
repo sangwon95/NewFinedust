@@ -48,6 +48,8 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     val stationValue: MutableLiveData<String> get() = _stationValue
     val address: MutableLiveData<String> get() = _address
 
+    private lateinit var tempAddress: String
+
     companion object {
         const val TAG = "MainViewModel - 로그"
     }
@@ -56,35 +58,96 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
         Log.d(TAG, "생성자 호출");
     }
 
+    fun getIntegrated(address: String) {
+        Log.d(TAG, "getFineDust $address start")
+
+        viewModelScope.launch {
+            try {
+                val tmxyResponse = repository.getTmxy(TmxyData(umdName = address))
+
+                if (tmxyResponse.isSuccessful) {
+                    val tmxyItems = tmxyResponse.body()!!.response.body.tmxyItems
+                    val stationResponse = repository.getStation(StationData(tmX = tmxyItems[0].tmX, tmY = tmxyItems[0].tmY))
+
+                    if (stationResponse.isSuccessful) {
+                        val stationItems = stationResponse.body()!!.response.body.stationItems
+                        val stationName = stationItems[0].stationName
+
+                        val dustRequestData = FineDustRequestData(stationName = stationName)
+                        val dustResponse = repository.getFineDust(dustRequestData) // 미세먼지 정보
+                        val forecastResponse = repository.getForecast("2024-01-29") // 예보정보
+
+                        if (dustResponse.isSuccessful && forecastResponse.isSuccessful) {
+                            val dustItem = dustResponse.body()!!.response.dustBody.dustItem!![0]
+                            val forecastItem = forecastResponse.body()!!.response.forecastBody.forecastItem!![0]
+
+                            val dustCombinedData = DustCombinedData(
+                                dustItem = dustItem,
+                                forecastItem = forecastItem,
+                                address = address
+                            )
+
+                            _dustCombinedData.postValue(dustCombinedData)
+                            Log.d(TAG, "getFineDust $address end")
+
+                        } else {
+                            handleApiError("미세먼지 정보, 예보를 불러오지 못했습니다.")
+                        }
+
+                    } else {
+                        handleApiError("StationData ${stationResponse.body().toString()}")
+                    }
+
+                } else {
+                    handleApiError("getTmxy ${tmxyResponse.body().toString()}")
+                }
+            } catch (e: Exception) {
+                handleException(e)
+            }
+        }
+    }
+    private fun handleApiError(errorMessage: String) {
+        Log.d(TAG + "Error", errorMessage)
+        onError("Error: $errorMessage")
+    }
+
+    private fun handleException(exception: Exception) {
+        Log.e(TAG, "Exception during getIntegrated: $exception")
+        onError("Error: ${exception.message}")
+    }
+
 
     /**
      * 에어코리아 API를 통해서 미세먼지 수치(데이터)를 가져온다.
      */
     fun getFineDust(stationName: String) {
+        Log.d(TAG,"getFineDust start")
         job = viewModelScope.launch {
             try {
-                    val fineDustRequestData = FineDustRequestData(stationName= stationName)
-                    val responseDust = async { repository.getFineDust(fineDustRequestData) } //미세먼지 정보
-                    val responseForecast = async { repository.getForecast("2023-10-18") } //예보정보
-                    val isDustCombinedResponse = responseDust.await().isSuccessful && responseForecast.await().isSuccessful
+                val fineDustRequestData = FineDustRequestData(stationName = stationName)
+                val responseDust = repository.getFineDust(fineDustRequestData) // 미세먼지 정보
+                val responseForecast = repository.getForecast("2024-01-26") // 예보정보
+
+                val isDustCombinedResponse = responseDust.isSuccessful && responseForecast.isSuccessful
 
                 withContext(Dispatchers.IO + exceptionHandler) {
                     if (isDustCombinedResponse) {
                         val dustCombinedData = DustCombinedData(
-                            dustItem = responseDust.await().body()!!.response.dustBody.dustItem!![0],
-                            forecastItem = responseForecast.await().body()!!.response.forecastBody.forecastItem!![0]
+                            dustItem = responseDust.body()!!.response.dustBody.dustItem!![0],
+                            forecastItem = responseForecast.body()!!.response.forecastBody.forecastItem!![0],
+                            address = tempAddress
                         )
                         _dustCombinedData.postValue(dustCombinedData)
+                        Log.d(TAG,"getFineDust end")
 
                         loading.postValue(false)
                     } else {
-                        Log.d(TAG+ "Error", "미세먼지 정보, 예보를 불러오지 못했습니다.")
+                        Log.d(TAG + "Error", "미세먼지 정보, 예보를 불러오지 못했습니다.")
                         onError("미세먼지 정보, 예보를 불러오지 못했습니다.")
                     }
                 }
-            }
-            catch (e: Exception) {
-                Log.e(TAG + "Exception Error:", e.toString())
+            } catch (e: Exception) {
+                Log.e(TAG + "getFineDust Exception Error:", e.toString())
                 // Show AlertDialog..
             }
         }
@@ -95,20 +158,30 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
      * 에어코리아 API를 통해서 Tmx, Tmy 값을 가져온다.
      */
     fun getTmxy(address: String) {
+        tempAddress = address
         job = viewModelScope.launch {
             try {
+                Log.d(TAG,"getTmxy start")
                 val response = repository.getTmxy(TmxyData(umdName = address))
+
                 withContext(Dispatchers.IO + exceptionHandler) {
                     if (response.isSuccessful) {
-                        _tmxyValue.postValue(response.body()!!.response.body.tmxyItems)
+                        /**
+                         * 테스트
+                         */
+                        val station = response.body()!!.response.body.tmxyItems
+                        getStationName(station[0].tmX, station[0].tmY)
+                        Log.d(TAG,"getTmxy end")
+
+                        //_tmxyValue.postValue(response.body()!!.response.body.tmxyItems)
                         loading.postValue(false)
                     } else {
-                        Log.d(TAG+ "Error", response.body().toString())
+                        Log.d(TAG+ "Error", "getTmxy${response.body().toString()}")
                         onError("Error : ${response.message()} ")
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG+ "Exception Error:", e.toString())
+                Log.e(TAG+ "getTmxy Exception Error:", e.toString())
                 // Show AlertDialog..
             }
         }
@@ -121,18 +194,29 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     fun getStationName(tmX: String, tmY: String) {
         job = viewModelScope.launch {
             try {
+                Log.d(TAG,"getStationName start")
+
                 val response = repository.getStation(StationData(tmX = tmX, tmY = tmY))
+
                 withContext(Dispatchers.IO + exceptionHandler) {
                     if (response.isSuccessful) {
-                        _stationValue.postValue(response.body()!!.response.body.stationItems[0].stationName)
+                        /**
+                         *  테스트중
+                         */
+                        Log.d(TAG,"getStationName: ${response.body()!!.response.body.stationItems.size}")
+                        val stationName = response.body()!!.response.body.stationItems[0].stationName
+                        Log.d(TAG,"getStationName $stationName end")
+                        getFineDust(stationName = stationName)
+
+                        // _stationValue.postValue(response.body()!!.response.body.stationItems[0].stationName)
                         loading.postValue(false)
                     } else {
-                        Log.d(TAG+ "Error", response.body().toString())
-                        onError("Error : ${response.message()} ")
+                        Log.d(TAG+ "Error!!", response.body().toString())
+                        onError("Error!! : ${response.message()} ")
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG+ "Exception Error:", e.toString())
+                Log.e(TAG+ "getStationName Exception Error:getStationName", e.toString())
                 // Show AlertDialog..
             }
         }
@@ -205,23 +289,3 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
         job?.cancel()
     }
 }
-
-
-//                            for(value in addressList){
-//                                Log.d(TAG, value.toString())
-//
-//                                // thoroughfare=null 경우 도로명주소가 나온경우이다.
-//                                // umdName 규격상 구도로 주소명을 넣어야된다.
-//                                 if(value.thoroughfare != null){
-//                                     val address = value.getAddressLine(0).split(" ")
-//
-//                                     // sub-admin ex) (구)가 포함된 주소는 index:4번째 까지 포함해야된다.
-//                                     // ex) 충청북도 청주시 흥덕구 가경동
-//                                     if(address[4].contains("동")){
-//                                         _address.postValue("${address[1]} ${address[2]} ${address[3]} ${address[4]}")
-//                                     }
-//                                     else {
-//                                         _address.postValue("${address[1]} ${address[2]} ${address[3]}")
-//                                     }
-//                                 }
-//                            }

@@ -8,45 +8,76 @@
     tools:context=".SearchActivity">
 
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/edit_searchbar"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:orientation="horizontal"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginVertical="15dp"
+        android:background="@drawable/search_edit_text_background"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0">
 
+        <ImageView
+            android:id="@+id/search_image"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:src="@drawable/baseline_arrow_back_24"
+            android:layout_marginStart="10dp"
+
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.476"
+            />
+
         <EditText
-            android:layout_width="280dp"
-            android:layout_height="wrap_content"
+            android:id="@+id/search_edit"
+            android:layout_width="250dp"
+            android:layout_height="30dp"
+            android:background="@android:color/transparent"
             android:hint="읍/동/면을 입력해주세요."
             android:imeOptions="actionSearch"
             android:inputType="text"
             android:textSize="15sp"
-            android:background="@android:color/transparent" />
+            android:layout_marginStart="15dp"
+            app:layout_constraintStart_toEndOf="@+id/search_image"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.466"
+            tools:layout_editor_absoluteX="36dp" />
 
-    </LinearLayout>
+        <ImageView
+            android:id="@+id/cancel_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/baseline_cancel_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.970"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.476" />
 
 
-    <androidx.cardview.widget.CardView
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="10dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/edit_searchbar">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_search"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:listitem="@layout/search_list_item" />
-    </androidx.cardview.widget.CardView>
+        android:layout_marginTop="10dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/edit_searchbar"
+        app:layout_constraintStart_toStartOf="@+id/edit_searchbar"
+        app:layout_constraintTop_toBottomOf="@+id/edit_searchbar"
+        app:layout_constraintVertical_bias="0.0"
+        tools:listitem="@layout/search_list_item" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

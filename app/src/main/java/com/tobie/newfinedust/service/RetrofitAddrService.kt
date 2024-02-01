@@ -41,6 +41,8 @@ interface RetrofitAddrService {
         @Query("request") request: String,
         @Query("format") format: String,
         @Query("data") data: String,
+        @Query("size") size: Int,
+        @Query("page") page: Int,
         @Query("attrfilter") attrfilter: String,
         @Query("columns") columns: String,
         @Query("geometry") geometry: Boolean,
