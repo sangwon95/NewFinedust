@@ -84,18 +84,22 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
 
                 val resultList = result.data?.getStringArrayListExtra("updateList")
                 if (resultList != null) {
-                    deleteAllRegion()
+
 
                     isMoveLastPage = false
-                    addressList.clear()
                     resultList.removeAt(0)
+                    addressList.clear()
                     addressList = resultList
 
-                    // 사용 예시: 받은 ArrayList<String>을 사용
-                    for (address in addressList) {
-                        insertRegion(address)
+                    deleteAllRegion { isResult->
+                        if(isResult){
+                            for (address in addressList) { // 사용 예시: 받은 ArrayList<String>을 사용
+                                insertRegion(address)
+                            }
+                        } else {
+                            Log.d(TAG,"deleteAllRegion false 리턴됨")
+                        }
                     }
-
                     reorderAndRemove(resultList)
 
                 } else {
@@ -132,9 +136,8 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
      */
     private fun reorderAndRemove(list: List<String>) {
         val tempList = dustCombinedItemList.toList()
+        dustCombinedItemList.clear() // dustCombinedItemList을 list 따라 재배열하고 삭제합니다.
 
-        // dustCombinedItemList을 list 따라 재배열하고 삭제합니다.
-        dustCombinedItemList.clear()
         list.forEach { element ->
             val dustCombinedData = tempList.find { it.address == element }
             dustCombinedData?.let {
@@ -142,8 +145,7 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
             }
         }
 
-        // 위 변경사항 ViewPage2 adapter 재배치
-        setupViewPager()
+        setupViewPager() // 위 변경사항 ViewPage2 adapter 재배치
 
         // 첫번째 ViewPage2로 이동
         if(isMoveLastPage){
@@ -338,24 +340,48 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
 
     @SuppressLint("StaticFieldLeak")
     fun insertRegion(address: String) {
+        Log.d(TAG, "insertRegion: [ $address ] RoomDB에 저장")
         CoroutineScope(Dispatchers.IO).launch {
-            val region = RegionEntity(null, address)
-            roomDB.regionDAO().insert(region)
-        }.start()
+            try {
+                val region = RegionEntity(null, address)
+                roomDB.regionDAO().insert(region)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error inserting region: ${e.message}")
+            }
+        }
     }
 
     @SuppressLint("StaticFieldLeak")
     fun getAllRegion() {
         CoroutineScope(Dispatchers.IO).launch {
             regionList = roomDB.regionDAO().getAll()
+            if(regionList.isEmpty()){
+                Log.d(TAG, "getAllRegion: RoomDB에 저장된 주소가 없습니다.")
+
+            }
             for (value in regionList) {
                 addressList.add(value.region)
-            }
-
-            for(address in regionList){
-                Log.d(TAG, "RoomDB에서 가져온 주소:$address")
+                Log.d(TAG, "getAllRegion: RoomDB에서 가져온 주소: ${value.region}")
             }
         }.start()
+    }
+
+    /**
+     * Region DB 전체 삭제
+     */
+    @SuppressLint("StaticFieldLeak")
+    private fun deleteAllRegion(callback: (Boolean) -> Unit) {
+        Log.d(TAG, "deleteAllRegion: RoomDB에 저장된 주소 모두 삭제")
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                roomDB.regionDAO().deleteAll()
+                callback(true)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error deleteAllRegion: ${e.message}")
+                callback(false) // Callback to indicate insertion failure
+            }
+
+        }
     }
 
     fun deleteRegion() {
@@ -365,14 +391,7 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
         }
     }
 
-    /**
-     * Region DB 전체 삭제
-     */
-    private fun deleteAllRegion() {
-        CoroutineScope(Dispatchers.IO).launch {
-            roomDB.regionDAO().deleteAll()
-        }.start()
-    }
+
 
     override fun onInsertListener(region: RegionEntity) {
         //insertRegion()
