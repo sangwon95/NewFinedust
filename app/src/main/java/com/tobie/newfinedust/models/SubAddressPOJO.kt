@@ -68,7 +68,7 @@ data class FeatureCollection(
 
     @SerializedName("features")
     @Expose
-    val features: List<Feature>,
+    val features: ArrayList<Feature>,
 
     @SerializedName("type")
     @Expose

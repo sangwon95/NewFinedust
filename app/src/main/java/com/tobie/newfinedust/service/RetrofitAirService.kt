@@ -32,9 +32,7 @@ interface RetrofitAirService {
         }
     }
 
-    /**
-     * 관측정소별 실시간 측정정보 조회
-     */
+    /** 관측정소별 실시간 측정정보 조회*/
     @GET("/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${BuildConfig.AIR_API_KEY}")
     suspend fun getFineDust(
         @Query("stationName") stationName: String,

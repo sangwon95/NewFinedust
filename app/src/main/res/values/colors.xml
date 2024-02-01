@@ -18,9 +18,7 @@
 <!--    <color name="shadow_light_color">#4C4E53</color>-->
 <!--    <color name="shadow_dark_color">#202225</color>-->
 
-
-    <color name="background_color_50">#50FFFFFF</color>
-    <color name="background_color_60">#40FFFFFF</color>
+    <color name="background_color_60">#20000000</color>
     <color name="statusBarColor">#6293CF</color>
 
 

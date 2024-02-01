@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -7,67 +7,79 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintTop_toBottomOf="@+id/constraintLayout_frame"
-    app:layout_constraintBottom_toBottomOf="parent">
+    android:scrollbars="none"
+   >
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout_frame"
+        android:id="@+id/main_frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/ba_gradient">
+        android:background="@drawable/ba_gradient_worst"
+        >
 
-        <!-- 지역 추가 버튼-->
         <ImageView
-            android:id="@+id/iv_add"
-            android:layout_width="75dp"
-            android:layout_height="75dp"
+            android:id="@+id/addImageView"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_gravity="center"
-            android:padding="20dp"
+            android:padding="10dp"
             android:src="@drawable/baseline_add_location_alt_24"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.983"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintBottom_toTopOf="@+id/main_box"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.94"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.219" />
 
+        <ImageView
+            android:id="@+id/editImageView"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:padding="10dp"
+            android:src="@drawable/baseline_edit_24"
+            app:layout_constraintBottom_toTopOf="@+id/main_box"
+            app:layout_constraintEnd_toStartOf="@id/addImageView"
+            app:layout_constraintHorizontal_bias="0.977"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.219" />
 
-        <!--메인 박스 -->
         <androidx.cardview.widget.CardView
             android:id="@+id/main_box"
             android:layout_width="230dp"
             android:layout_height="230dp"
+            app:cardBackgroundColor="@color/background_color_60"
             app:cardCornerRadius="30dp"
-            app:cardBackgroundColor="@color/background_color_50"
-            android:foreground="?android:attr/selectableItemBackground"
             app:cardElevation="0dp"
-            android:layout_marginTop="20dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintVertical_bias="0.15"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/iv_add"
+            app:layout_constraintTop_toTopOf="parent"
             app:shape_roundRect_bottomLeftRadius="12dp"
             app:shape_roundRect_bottomRightRadius="12dp"
             app:shape_roundRect_shadow_type="drop_shadow"
             app:shape_roundRect_topLeftRadius="12dp"
             app:shape_roundRect_topRightRadius="12dp">
+
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="227dp"
                 android:gravity="center"
                 android:orientation="vertical"
                 tools:layout_editor_absoluteX="0dp"
                 tools:layout_editor_absoluteY="0dp">
 
                 <TextView
-                    android:id="@+id/tv_address"
+                    android:id="@+id/addressTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="대전 광역시"
+                    android:text="서울특별시"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="30sp"
+                    android:textSize="15sp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -79,20 +91,22 @@
                     android:layout_marginVertical="20dp"
                     android:gravity="center"
                     android:orientation="horizontal">
+
                     <ImageView
+                        android:id="@+id/mainImageView"
                         android:layout_width="60dp"
                         android:layout_height="60dp"
                         android:layout_marginRight="5dp"
                         android:src="@drawable/ic_good" />
 
                     <TextView
-                        android:id="@+id/tv_state"
+                        android:id="@+id/stateTextView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="보통"
                         android:textAlignment="center"
                         android:textColor="@color/white"
-                        android:textSize="40sp"
+                        android:textSize="30sp"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -101,38 +115,47 @@
                 </LinearLayout>
 
 
-                <TextView
-                    android:id="@+id/tv_pm10"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="미세먼지: 10㎍/m³"
-                    android:textAlignment="textEnd"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/white"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:orientation="vertical"
+                    android:gravity="end">
+                    <TextView
+                        android:id="@+id/pm10TextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="미세먼지: 10㎍/m³"
+                        android:textAlignment="textEnd"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="3dp"/>
+                    <TextView
+                        android:id="@+id/pm25TextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=" 초미세먼지: 26㎍/m³"
+                        android:textAlignment="textEnd"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tv_pm25"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=" 초미세먼지: 26㎍/m³"
-                    android:textAlignment="textEnd"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/white"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
         <TextView
-            android:id="@+id/iv_dateTime"
+            android:id="@+id/dateTimeTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="6dp"
@@ -157,7 +180,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/main_box"
-            app:layout_constraintVertical_bias="0.193"
+            app:layout_constraintVertical_bias="0.1"
             app:shape_roundRect_backgroundColor="#ECF0F3"
             app:shape_roundRect_bottomLeftRadius="12dp"
             app:shape_roundRect_bottomRightRadius="12dp"
@@ -173,12 +196,13 @@
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/remain_list_item" />
 
+
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardView2"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="wrap_content"
             android:layout_marginHorizontal="20dp"
             android:layout_marginTop="16dp"
             android:foreground="?android:attr/selectableItemBackground"
@@ -236,23 +260,30 @@
                     app:layout_constraintTop_toBottomOf="@+id/view">
 
                     <TextView
-                        android:id="@+id/tv_forecastDate"
+                        android:id="@+id/forecastDateTextView"
                         android:layout_width="100dp"
                         android:layout_height="match_parent"
-                        android:text="2023-10-13"
+                        android:text="2000-01-01"
                         android:gravity="center"
                         android:textColor="@color/white"
                         />
 
-                    <TextView
-                        android:id="@+id/tv_forecastContent"
+                    <ScrollView
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:text="[미세먼지] 전 권역이 '좋음'~'보틍으로 예상됩니다.\n\n [미세먼지] 원활한 대기 확산으로 대기질이 대체로 '보통'수준일 것으로 예상됩니다."
-                        android:gravity="start"
-                        android:layout_marginRight="10dp"
-                        android:textColor="@color/white"
-                        />
+                        android:layout_height="match_parent">
+                        <TextView
+                            android:id="@+id/forecastContentTextView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="15dp"
+                            android:text="[미세먼지] 전 권역이 '좋음'~'보틍으로 예상됩니다.\n\n [미세먼지] 원활한 대기 확산으로 대기질이 대체로 '보통'수준일 것으로 예상됩니다."
+                            android:textSize="13sp"
+                            android:gravity="start"
+                            android:layout_marginEnd="10dp"
+                            android:textColor="@color/white"
+                            />
+                    </ScrollView>
+
 
                 </LinearLayout>
 
@@ -264,12 +295,13 @@
         <androidx.cardview.widget.CardView
             android:id="@+id/cardView3"
             android:layout_width="match_parent"
-            android:layout_height="130dp"
+            android:layout_height="wrap_content"
             android:layout_margin="20dp"
             android:foreground="?android:attr/selectableItemBackground"
             app:cardBackgroundColor="@color/background_color_60"
             app:cardCornerRadius="20dp"
             app:cardElevation="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@+id/cardView2"
             app:layout_constraintStart_toStartOf="@+id/cardView2"
             app:layout_constraintTop_toBottomOf="@+id/cardView2"
@@ -285,21 +317,17 @@
                 android:layout_height="match_parent"
                 android:layout_margin="20dp"
                 android:gravity="start"
-                android:textSize="11sp"
-                android:text= "00는 사용자분과 가장 가까이 위치한, 정상 작동 중인 측정소의 실시간 정보를 보여드립니다. \n\n 본 자료는 한국환경공단(에어코리아)과 기상청에서 제공하는 실시간 관측 자료이며 실제 대기농도 수치와 다를 수 있습니다."
-                android:textColor="@color/white" />
+                android:text="00는 사용자분과 가장 가까이 위치한, 정상 작동 중인 측정소의 실시간 정보를 보여드립니다. \n\n 본 자료는 한국환경공단(에어코리아)과 기상청에서 제공하는 실시간 관측 자료이며 실제 대기농도 수치와 다를 수 있습니다."
+                android:textColor="@color/white"
+                android:textSize="11sp" />
         </androidx.cardview.widget.CardView>
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="30dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/cardView3" />
+
+
+
 
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-</androidx.core.widget.NestedScrollView>
+</ScrollView>
 

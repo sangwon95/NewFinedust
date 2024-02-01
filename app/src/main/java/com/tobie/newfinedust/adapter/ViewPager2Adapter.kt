@@ -1,120 +1,114 @@
 package com.tobie.newfinedust.adapter
 
-import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.graphics.Color
-import android.graphics.PorterDuff
-import android.os.AsyncTask
-import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.content.ContextCompat.startActivity
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.tobie.newfinedust.MainActivity
 import com.tobie.newfinedust.R
-import com.tobie.newfinedust.SearchActivity
+import com.tobie.newfinedust.databinding.ItemViewBinding
 import com.tobie.newfinedust.models.*
-import com.tobie.newfinedust.room.RegionDatabase
-import com.tobie.newfinedust.room.RegionEntity
 import com.tobie.newfinedust.room.RoomListener
-import com.tobie.newfinedust.utils.Etc
-import kotlin.math.log
+import com.tobie.newfinedust.utils.Etc.Companion.calculateAtmosphericEnvironment
+import com.tobie.newfinedust.utils.Etc.Companion.getCoValueAirQualityLevel
+import com.tobie.newfinedust.utils.Etc.Companion.getNo2ValueAirQualityLevel
+import com.tobie.newfinedust.utils.Etc.Companion.getO3GradeAirQualityLevel
+import com.tobie.newfinedust.utils.Etc.Companion.getSo2ValueAirQualityLevel
+import com.tobie.newfinedust.utils.Etc.Companion.getTextForStatus
+import com.tobie.newfinedust.utils.Etc.Companion.getTextForStatusIconImage
+import java.io.Serializable
 
-class ViewPager2Adapter(dustCombinedItemList: ArrayList<DustCombinedData>,
-                        var context: Context,
-                        var address: ArrayList<String>,
-                        private val roomListener: RoomListener,
-                        private val intentListener: IntentListener,
+class ViewPager2Adapter(
+    private var dustCombinedItemList: MutableList<DustCombinedData>,
+    var activity: MainActivity,
+    private val roomListener: RoomListener,
+    private val intentListener: IntentListener,
 ) : RecyclerView.Adapter<ViewPager2Adapter.PagerViewHolder>() {
-    var mDustCombinedItemList = dustCombinedItemList
 
-    override fun getItemCount(): Int = mDustCombinedItemList.size
+    override fun getItemCount(): Int {
+        return dustCombinedItemList.size
+    }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = PagerViewHolder((parent))
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PagerViewHolder {
+        val inflater = parent.context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        val binding = ItemViewBinding.inflate(inflater, parent, false)
+        return PagerViewHolder(binding)
+    }
 
     override fun onBindViewHolder(holder: PagerViewHolder, position: Int) {
-        //메인박스(미세, 초미세먼지) UI 적용
-        setTextInMainBox(holder, position)
-
-        holder.addIcon.setOnClickListener {
-            //화면전화
-            intentListener.doIntentListener()
-           // roomListener.onInsertListener(RegionEntity(null, "관평동"))
-        }
-
-        holder.txtAddress.setOnClickListener {
-            roomListener.onGetAllListener()
-        }
+        holder.bind(dustCombinedItemList[position])
     }
 
-    inner class PagerViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder
-        (LayoutInflater.from(parent.context).inflate(R.layout.view_item, parent, false)){
-        var recyclerView: RecyclerView = itemView.findViewById(R.id.recyclerView)
+    inner class PagerViewHolder(private var binding: ItemViewBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(item: DustCombinedData) {
+            val pm10Value = item.dustItem.pm10Value?.toIntOrNull() ?: 0
+            val pm25Value = item.dustItem.pm25Value?.toIntOrNull() ?: 0
+            val dateTime = item.dustItem.dataTime?: "-"
+            val txtState = calculateAtmosphericEnvironment(pm10Value, pm25Value)
 
-        var addIcon: ImageView = itemView.findViewById(R.id.iv_add)
-        var txtAddress: TextView = itemView.findViewById(R.id.tv_address)
-        var txtState: TextView = itemView.findViewById(R.id.tv_state)
-        var txtPm10: TextView = itemView.findViewById(R.id.tv_pm10)
-        var txtPm25: TextView = itemView.findViewById(R.id.tv_pm25)
-        var txtDateTime: TextView = itemView.findViewById(R.id.iv_dateTime)
+            binding.mainFrame.setBackgroundResource(getTextForStatus(txtState))
+            binding.mainFrame.setBackgroundResource(getTextForStatus(txtState)) // background color
+            binding.mainImageView.setImageDrawable(ContextCompat.getDrawable(activity, getTextForStatusIconImage(txtState)))
+            binding.pm10TextView.text = activity.getString(R.string.pm_unit, "미세먼지", pm10Value.toString())
+            binding.pm25TextView.text = activity.getString(R.string.pm_unit, "초 미세먼지", pm25Value.toString())
+            binding.dateTimeTextView.text = dateTime
+            binding.addressTextView.text = item.address
+            binding.stateTextView.text = txtState
 
-        //예보
-        var txtForecastDate: TextView = itemView.findViewById(R.id.tv_forecastDate)
-        var txtForecastContent: TextView = itemView.findViewById(R.id.tv_forecastContent)
+            val no2Value = item.dustItem.no2Value ?: "-"
+            val o3Value = item.dustItem.o3Value ?: "-"
+            val coValue = item.dustItem.coValue ?: "-"
+            val so2Value = item.dustItem.so2Value ?: "-"
+
+            val data: ArrayList<Remain> = arrayListOf(
+                Remain("이산화 질소", getNo2ValueAirQualityLevel(no2Value), "$no2Value ppm", getTextForStatusIconImage(getNo2ValueAirQualityLevel(no2Value))),
+                Remain("오존", getO3GradeAirQualityLevel(o3Value), "$o3Value ppm", getTextForStatusIconImage(getO3GradeAirQualityLevel(o3Value))),
+                Remain("일산화탄소", getCoValueAirQualityLevel(coValue), "$coValue ppm", getTextForStatusIconImage(getCoValueAirQualityLevel(coValue))),
+                Remain("이황산가스", getSo2ValueAirQualityLevel(so2Value), "$so2Value ppm", getTextForStatusIconImage(getSo2ValueAirQualityLevel(so2Value))),
+            )
+            val remainAdapter = RemainAdapter(data)
+            binding.recyclerView.adapter = remainAdapter
+            binding.recyclerView.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.HORIZONTAL, false) // 가로 정렬
+
+
+            // 미세먼지 예보 정보
+            val date = item.forecastItem.informData
+            val informCause = item.forecastItem.informCause
+            val informOverall = item.forecastItem.informOverall
+            binding.forecastDateTextView.text = date
+            binding.forecastContentTextView.text = activity.getString(R.string.forecast_unit, informCause, informOverall)
+
+
+            // 지역 추가 버튼 리스너
+            binding.addImageView.setOnClickListener {
+                intentListener.addIntentListener() //화면전화
+            }
+
+
+            // 지역 리스트 수정 버튼 리스너
+            binding.editImageView.setOnClickListener {
+                intentListener.editIntentListener() //화면전화
+            }
+        }
     }
-
 
     /**
      * viewPage 미세먼지 수치 값을 업데이트 한다.
      */
      fun update(dustItemList: ArrayList<DustCombinedData>) {
-        mDustCombinedItemList = dustItemList
-        notifyItemChanged(dustItemList.size-1)
+        dustCombinedItemList = dustItemList
+        notifyDataSetChanged()
     }
 
-    private fun setTextInMainBox(holder: PagerViewHolder, position: Int) {
-         val pm10Value = mDustCombinedItemList[position].dustItem.pm10Value?.toIntOrNull() ?: 0
-         val pm25Value = mDustCombinedItemList[position].dustItem.pm25Value?.toIntOrNull() ?: 0
-         val dateTime = mDustCombinedItemList[position].dustItem.dataTime?: "-"
-
-        holder.txtAddress.text = address[position]
-        holder.txtState.text = Etc.calculateAtmosphericEnvironment(pm10Value, pm25Value)
-
-        holder.txtPm10.text = context.getString(R.string.pm_unit, "미세먼지", pm10Value.toString())
-        holder.txtPm25.text = context.getString(R.string.pm_unit, "초 미세먼지", pm25Value.toString())
-        holder.txtDateTime.text = dateTime
-
-
-        /**
-         * 여기서부터 하면된다.
-         * 6/1 각 status 기준치에 맞게 만들어야됨!!
-         */
-        val data: ArrayList<Remain> = arrayListOf<Remain>(
-            Remain("이산화 질소","아주좋음", "${mDustCombinedItemList[position].dustItem.no2Value?:"-"} ppm"),
-            Remain("오존","아주좋음", "${mDustCombinedItemList[position].dustItem.o3Grade?:"-"} ppm"),
-            Remain("일산화탄소","아주좋음", "${mDustCombinedItemList[position].dustItem.coValue?:"-"} ppm"),
-            Remain("이황산가스","아주좋음", "${mDustCombinedItemList[position].dustItem.so2Value?:"-"} ppm"),
-        )
-
-        val remainAdapter = RemainAdapter(data)
-        holder.recyclerView.adapter = remainAdapter
-        holder.recyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false) // 가로 정렬
-
-
-        /**
-         * 미세먼지 예보 정보
-         */
-        val date = mDustCombinedItemList[position].forecastItem.informData
-        val informCause = mDustCombinedItemList[position].forecastItem.informCause
-        val informOverall = mDustCombinedItemList[position].forecastItem.informOverall
-
-        holder.txtForecastDate.text = date
-        holder.txtForecastContent.text = context.getString(R.string.forecast_unit, informCause, informOverall)
-
+    fun remove(removeDustItemPosition: Int) {
+        dustCombinedItemList.removeAt(removeDustItemPosition)
+        notifyDataSetChanged()
     }
 }

@@ -11,6 +11,8 @@ class SearchRepository constructor(private val retrofitService: RetrofitAddrServ
         subAddressRequestData.request,
         subAddressRequestData.format,
         subAddressRequestData.data,
+        subAddressRequestData.size,
+        subAddressRequestData.page,
         subAddressRequestData.attrfilter,
         subAddressRequestData.columns,
         subAddressRequestData.geometry,
