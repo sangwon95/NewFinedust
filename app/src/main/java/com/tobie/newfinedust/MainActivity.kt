@@ -77,6 +77,9 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
     private var addressList: ArrayList<String> = arrayListOf() //지역 리스트
     private var dustCombinedItemList: ArrayList<DustCombinedData> = arrayListOf()
 
+    // 변수명 예시: isLocationPermissionGranted
+    private var isLocationPermissionGranted: Boolean = false
+
     // 주소 리스트 수정 StartActivityForResult
     private val editLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -84,7 +87,6 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
 
                 val resultList = result.data?.getStringArrayListExtra("updateList")
                 if (resultList != null) {
-
 
                     isMoveLastPage = false
                     resultList.removeAt(0)
@@ -128,7 +130,7 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
             }
         }
 
-    private var gpsAddress: String = "위치정보를 활성화해주세요."
+    private var gpsRequestText: String = "위치정보를 활성화해주세요."
 
 
     /**
@@ -171,12 +173,12 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
 
         Permission(this,{
             // 위치 권한이 허용되었을 때 수행할 작업
+            isLocationPermissionGranted = true
             viewModel.getLocation(this, this)
         },{
             // 계속 위치권한 거절했을 때
             handleLocationPermissionDenied()
         }).checkPermission()
-
 
         adapter = ViewPager2Adapter(dustCombinedItemList, this, this, this)
         binding.viewPager2.adapter = adapter // 어뎁터 생성
@@ -236,10 +238,13 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
         )[MainViewModel::class.java]
 
         // 현재 위치기반 주소 수신
-        viewModel.address.observe(this) {
-            Log.d(TAG, "가져온 주소값: $it")
-            addressList.add(it)
-            viewModel.getTmxy(it)
+        viewModel.address.observe(this) { gpsAddress ->
+            Log.d(TAG, "가져온 GPS주소: $gpsAddress")
+            addressList.add(0, gpsAddress)
+
+            for (value in addressList) {
+                getFineDustData(value)
+            }
         }
 
         // Tmx, Tmy값 수신
@@ -256,6 +261,8 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
 
         // 미세먼지 수치 수신
         viewModel.dustCombinedData.observe(this) {
+            Log.i(TAG, "dustCombinedItemList value:$it")
+
             dustCombinedItemList.add(it)
 
             /**
@@ -270,8 +277,8 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
 //                    Log.d(TAG, "value.region: ${value.region}")
 //                }
 //            }
-            Log.i(TAG, "dustCombinedItemList value:$it")
             Log.i(TAG, "dustCombinedItemList 길이:${dustCombinedItemList.size}")
+            Log.i(TAG, "addressList 길이:${addressList.size}")
 
             if(dustCombinedItemList.size == addressList.size){
                 reorderAndRemove(addressList) // 비동기 처리 후 바뀐순서를 재 배치
@@ -416,8 +423,8 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
         when (requestCode) {
             LOCATION_PERMISSION_REQUEST_CODE -> {
                 val resultCode = grantResults.firstOrNull() ?: PackageManager.PERMISSION_DENIED
-
                 if (resultCode == PackageManager.PERMISSION_GRANTED) {
+                    isLocationPermissionGranted = true
                     viewModel.getLocation(this, this)
                 } else {
                     handleLocationPermissionDenied()
@@ -476,12 +483,20 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
     }
 
     override fun editIntentListener() {
-        val tempAddressList: ArrayList<String> = arrayListOf()
-        tempAddressList.add(gpsAddress) // gps 주소 텍스트를 따로 넣어준다.
-        tempAddressList.addAll(addressList)
+//        val tempAddressList: ArrayList<String> = arrayListOf()
+//        tempAddressList.add(gpsAddress) // gps 주소 텍스트를 따로 넣어준다.
+//        tempAddressList.addAll(addressList)
+
+        if(!isLocationPermissionGranted){
+            addressList.add(0, gpsRequestText)
+            Log.d(TAG,"isLocationPermissionGranted:$isLocationPermissionGranted")
+
+        } else {
+            Log.d(TAG,"isLocationPermissionGranted:$isLocationPermissionGranted")
+        }
 
         Intent(this, FavoritesActivity::class.java)
-            .putExtra("addressList", tempAddressList).apply {
+            .putExtra("addressList", addressList).apply {
                 editLauncher.launch(this)
             }
     }

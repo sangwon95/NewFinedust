@@ -59,9 +59,8 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     }
 
     fun getIntegrated(address: String) {
-        Log.d(TAG, "getFineDust $address start")
-
         viewModelScope.launch {
+            Log.d(TAG, "getFineDust $address start")
             try {
                 val tmxyResponse = repository.getTmxy(TmxyData(umdName = address))
 
@@ -86,14 +85,12 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
                                 forecastItem = forecastItem,
                                 address = address
                             )
-
                             _dustCombinedData.postValue(dustCombinedData)
                             Log.d(TAG, "getFineDust $address end")
 
                         } else {
                             handleApiError("미세먼지 정보, 예보를 불러오지 못했습니다.")
                         }
-
                     } else {
                         handleApiError("StationData ${stationResponse.body().toString()}")
                     }
