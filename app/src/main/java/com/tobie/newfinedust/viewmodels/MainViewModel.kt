@@ -20,6 +20,7 @@ import com.tobie.newfinedust.room.RegionDatabase
 import com.tobie.newfinedust.utils.Etc
 import com.tobie.repository.MainRepository
 import kotlinx.coroutines.*
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.system.measureTimeMillis
 import kotlin.time.measureTime
@@ -35,6 +36,11 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
         onError("Exception handled: ${throwable.localizedMessage}")
     }
 
+    /**
+     * 초기화시 위치 기반 주소, RoomDB 주소에서 가져온 미세먼지 데이터 List
+     */
+    private val _dustCombinedDataList = MutableLiveData<ArrayList<DustCombinedData>>()
+
     private val _dustCombinedData = MutableLiveData<DustCombinedData>()
     private val _tmxyValue = MutableLiveData<List<TmxyItem>>()
     private val _stationValue = MutableLiveData<String>()
@@ -43,19 +49,89 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     val loading = MutableLiveData<Boolean>()
     val errorMessage = MutableLiveData<String>()
 
+    val dustCombinedDataList: MutableLiveData<ArrayList<DustCombinedData>> get() = _dustCombinedDataList
     val dustCombinedData: MutableLiveData<DustCombinedData> get() = _dustCombinedData
     val tmxyValue: MutableLiveData<List<TmxyItem>> get() = _tmxyValue
     val stationValue: MutableLiveData<String> get() = _stationValue
     val address: MutableLiveData<String> get() = _address
 
+    private var _tempDustCombinedDataList: ArrayList<DustCombinedData> = arrayListOf()
+
     private lateinit var tempAddress: String
+
+    /**
+     * 현재 날짜
+     */
+    private var currentDateTime: String
 
     companion object {
         const val TAG = "MainViewModel - 로그"
     }
 
     init {
-        Log.d(TAG, "생성자 호출");
+        Log.d(TAG, "생성자 호출")
+        // current date time
+        val dateFormat = "yyyy-MM-dd"
+        val simpleDateFormat = SimpleDateFormat(dateFormat)
+        val date = Date(System.currentTimeMillis())
+
+        currentDateTime = simpleDateFormat.format(date)
+    }
+
+    /**
+     * 위치기반 주소, RoomDB에 저장된 주소 미세먼지 데이터 불러오기
+     */
+    fun fetchDataBasedOnAddressList(addressList: List<String>) {
+        for(address in addressList){
+            viewModelScope.launch {
+                Log.d(TAG, "getFineDust $address start")
+                try {
+                    val tmxyResponse = repository.getTmxy(TmxyData(umdName = address))
+
+                    if (tmxyResponse.isSuccessful) {
+                        val tmxyItems = tmxyResponse.body()!!.response.body.tmxyItems
+                        val stationResponse = repository.getStation(StationData(tmX = tmxyItems[0].tmX, tmY = tmxyItems[0].tmY))
+
+                        if (stationResponse.isSuccessful) {
+                            val stationItems = stationResponse.body()!!.response.body.stationItems
+                            val stationName = stationItems[0].stationName
+
+                            val dustRequestData = FineDustRequestData(stationName = stationName)
+                            val dustResponse = repository.getFineDust(dustRequestData) // 미세먼지 정보
+                            val forecastResponse = repository.getForecast(currentDateTime) // 예보정보
+
+                            if (dustResponse.isSuccessful && forecastResponse.isSuccessful) {
+                                val dustItem = dustResponse.body()!!.response.dustBody.dustItem!![0]
+                                val forecastItem = forecastResponse.body()!!.response.forecastBody.forecastItem!![0]
+
+                                val dustCombinedData = DustCombinedData(
+                                    dustItem = dustItem,
+                                    forecastItem = forecastItem,
+                                    address = address
+                                )
+                                _tempDustCombinedDataList.add(dustCombinedData)
+                                Log.d(TAG, "_tempDustCombinedDataList 추가된 : ${dustCombinedData}")
+
+                                if(_tempDustCombinedDataList.size == addressList.size){
+                                    dustCombinedDataList.postValue(_tempDustCombinedDataList)
+                                    Log.d(TAG, "모든 미세먼지 리스트 완성 메인엑티비티로 데이터 전송")
+                                }
+
+                            } else {
+                                handleApiError("미세먼지 정보, 예보를 불러오지 못했습니다.")
+                            }
+                        } else {
+                            handleApiError("StationData ${stationResponse.body().toString()}")
+                        }
+
+                    } else {
+                        handleApiError("getTmxy ${tmxyResponse.body().toString()}")
+                    }
+                } catch (e: Exception) {
+                    handleException(e)
+                }
+            }
+        }
     }
 
     fun getIntegrated(address: String) {
@@ -241,6 +317,7 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
         }
 
         fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+
                 if(location != null) {
                     Log.i(TAG, "${location.latitude} / ${location.longitude}")
 
@@ -262,6 +339,8 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
                             Log.e(TAG, "가져온 위도, 경도로 주소값 못 가져옴")
                         }
                     }
+                } else {
+                    Log.d(TAG, "location null!")
                 }
         }
     }

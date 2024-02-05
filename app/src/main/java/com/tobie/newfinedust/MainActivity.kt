@@ -51,8 +51,9 @@ import kotlinx.coroutines.launch
  */
 
 /**
- * TODO 미세먼지 예보불러올때 timeout error issue
- * TODO adapter에서 클릭 이벤트 연결해야됨
+ * TODO
+ *  1.미세먼지 예보불러올때 timeout error issue
+ *  2.검색시 특별자치도, 00구 삭제, 검색 에러 추가적으로 찾기
  */
 class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentListener {
 
@@ -242,9 +243,7 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
             Log.d(TAG, "가져온 GPS주소: $gpsAddress")
             addressList.add(0, gpsAddress)
 
-            for (value in addressList) {
-                getFineDustData(value)
-            }
+            viewModel.fetchDataBasedOnAddressList(addressList)
         }
 
         // Tmx, Tmy값 수신
@@ -257,6 +256,11 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
         viewModel.stationValue.observe(this) {
             Log.d(TAG, "관측소: $it")
             viewModel.getFineDust(stationName = it)
+        }
+
+        viewModel.dustCombinedDataList.observe(this) {
+            dustCombinedItemList = it
+            reorderAndRemove(addressList) // 비동기 처리 후 바뀐순서를 재 배치
         }
 
         // 미세먼지 수치 수신
@@ -424,6 +428,7 @@ class MainActivity : AppCompatActivity(), OnClickListener, RoomListener, IntentL
             LOCATION_PERMISSION_REQUEST_CODE -> {
                 val resultCode = grantResults.firstOrNull() ?: PackageManager.PERMISSION_DENIED
                 if (resultCode == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "PackageManager.PERMISSION_GRANTED 승인됨")
                     isLocationPermissionGranted = true
                     viewModel.getLocation(this, this)
                 } else {
