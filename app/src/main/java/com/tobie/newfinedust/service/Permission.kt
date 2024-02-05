@@ -15,26 +15,33 @@ class Permission(
 ) {
 
      fun checkPermission() {
-        when {
-            ContextCompat.checkSelfPermission(
-                mainActivity,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                // 위치 권한이 허용되어 있는 경우
-                getLocation()
-            }
+         when (PackageManager.PERMISSION_GRANTED) {
+             ContextCompat.checkSelfPermission(
+                 mainActivity,
+                 android.Manifest.permission.ACCESS_FINE_LOCATION
+             ) -> {
+                 // 위치 권한이 허용되어 있는 경우
+                 getLocation()
+             }
+             ContextCompat.checkSelfPermission(
+                 mainActivity,
+                 android.Manifest.permission.ACCESS_COARSE_LOCATION
+             ) -> {
+                 // 위치 권한이 허용되어 있는 경우
+                 getLocation()
+             }
 
-            // 교육용 팝업을 띄어야할때
-            // 최초 퍼미션(거절) 이후 팝업을 띄워 왜필요한지 설명 다이얼로그가 띄워진다.
-//            mainActivity.shouldShowRequestPermissionRationale(
-//                android.Manifest.permission.ACCESS_FINE_LOCATION
-//            ) -> {
-//                showPermissionInfoDialog()
-//            }
-            else -> {
-                requestAccessFineLocation()
-            }
-        }
+             // 교육용 팝업을 띄어야할때
+             // 최초 퍼미션(거절) 이후 팝업을 띄워 왜필요한지 설명 다이얼로그가 띄워진다.
+             //            mainActivity.shouldShowRequestPermissionRationale(
+             //                android.Manifest.permission.ACCESS_FINE_LOCATION
+             //            ) -> {
+             //                showPermissionInfoDialog()
+             //            }
+             else -> {
+                 requestAccessFineLocation()
+             }
+         }
     }
 
 
