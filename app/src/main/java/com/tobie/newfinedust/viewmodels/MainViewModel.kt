@@ -326,10 +326,9 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
                         geocoder.getFromLocation(location.latitude, location.longitude,1) { addressList ->
                             _address.postValue(Etc.translationAddress(addressList))
                         }
-                    }
-                    // 36.6137, 127.4364,
-                    else {
+                    } else {// 36.6137, 127.4364,
                         Log.i(TAG, "NOT Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU")
+                        @Suppress("DEPRECATION")
                         val addressList = geocoder.getFromLocation(location.latitude, location.longitude,3)
 
                         if (addressList != null) {
