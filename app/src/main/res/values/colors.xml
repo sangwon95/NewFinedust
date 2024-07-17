@@ -8,18 +8,30 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="gray">#838383</color>
+    <color name="gray_text">#BBBBBB</color>
+    <color name="search_bg">#e9e9e9</color>
+    <color name="search_text_color">#b8b8b8</color>
+
+    <color name="witheRed">#FF6161</color>
 
     <color name="light_Background">#6d9ad2</color>
     <color name="shadow_light_color">#FFFFFFFF</color>
     <color name="shadow_dark_color">#bebebe</color>
+    <color name="text_black_color">#555555</color>
 
     <color name="colorAccent">#55b9f3</color>
 
 <!--    <color name="shadow_light_color">#4C4E53</color>-->
 <!--    <color name="shadow_dark_color">#202225</color>-->
 
-    <color name="background_color_60">#20000000</color>
-    <color name="statusBarColor">#6293CF</color>
+    <color name="background_color_60">#20FFFFFF</color>
+    <color name="list_bg">#f1f2f6</color>
+
+
+    <color name="statusbar_good_color">#558BCE</color>
+    <color name="statusbar_normal_color">#4B8F4F</color>
+    <color name="statusbar_verybad_color">#C08A25</color>
+    <color name="statusbar_worst_color">#2B2B2B</color>
 
 
 </resources>

@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class RegionEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long?,
-    val region: String
+    val region: String,
+
 )

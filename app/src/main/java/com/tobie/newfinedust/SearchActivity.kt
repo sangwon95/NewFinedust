@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.viewpager2.widget.ViewPager2
+import com.tobie.newfinedust.activity.HomeActivity
 import com.tobie.newfinedust.adapter.SearchListAdapter
 import com.tobie.newfinedust.adapter.ViewPager2Adapter
 import com.tobie.newfinedust.databinding.ActivitySearchBinding
@@ -21,6 +22,7 @@ import com.tobie.newfinedust.models.DustCombinedData
 import com.tobie.newfinedust.models.Feature
 import com.tobie.newfinedust.models.FeatureCollection
 import com.tobie.newfinedust.service.RetrofitAddrService
+import com.tobie.newfinedust.utils.Etc
 import com.tobie.newfinedust.viewmodels.SearchViewModel
 import com.tobie.newfinedust.viewmodels.SearchViewModelFactory
 import com.tobie.repository.SearchRepository
@@ -46,9 +48,10 @@ class SearchActivity : AppCompatActivity(), AddressClickListener {
         override fun handleOnBackPressed() {
             // 뒤로 버튼 이벤트 처리
             if (impossibleBack) {
-                SearchActivity().onBackPressedDispatcher.onBackPressed()
+                //SearchActivity().onBackPressedDispatcher.onBackPressed()
+                finish()
             } else {
-                Toast.makeText(applicationContext, "주소를 선택해주세요.", Toast.LENGTH_LONG).show()
+                Toast.makeText(applicationContext, "검색 후 주소를 선택해주세요.", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -57,15 +60,15 @@ class SearchActivity : AppCompatActivity(), AddressClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        //view binding
-        binding = ActivitySearchBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        binding = ActivitySearchBinding.inflate(layoutInflater).apply {
+            setContentView(root)
+        }
 
         initSearchViewModel()
 
         this.onBackPressedDispatcher.addCallback(this, callback) // 백버튼 콜백 설정
 
+        binding.searchEdit.requestFocus() // EditText에 포커스 설정
         binding.searchEdit.addTextChangedListener {
             Log.i(TAG, "입려한 값: $it")
             viewModel.getSubAddress("$it")
@@ -77,11 +80,11 @@ class SearchActivity : AppCompatActivity(), AddressClickListener {
         }
 
         // 뒤로가기 버튼
-        binding.searchImage.setOnClickListener {
+        binding.backImageView.setOnClickListener {
             if(impossibleBack){
                 finish()
             } else {
-                Toast.makeText(this, "주소를 선택해주세요.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "검색 후 주소를 선택해주세요.", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -98,8 +101,8 @@ class SearchActivity : AppCompatActivity(), AddressClickListener {
         adapter = SearchListAdapter(featureList, this, this)
         binding.recyclerSearch.adapter = adapter // 어뎁터 생성
 
-        val dividerItemDecoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
-        binding.recyclerSearch.addItemDecoration(dividerItemDecoration)
+//        val dividerItemDecoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
+//        binding.recyclerSearch.addItemDecoration(dividerItemDecoration)
 
         // MainViewModelFactory: MainViewModel을 통해 전달되는 인자가 있을때 사용됩니다.
         // 생성자나 매개변수를 사용하지 않고 MainViewModel 객체를 인스턴스화한다.
@@ -129,11 +132,17 @@ class SearchActivity : AppCompatActivity(), AddressClickListener {
     }
 
     override fun getAddress(address: String) {
-        val intent = Intent(this, MainActivity::class.java).apply {
+        val intent = Intent(this, HomeActivity::class.java).apply {
             putExtra("selectedAddress", address)
         }
         setResult(RESULT_OK, intent)
         finish()
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        @Suppress("DEPRECATION")
+        onBackPressed()
+        return true
     }
 }
 

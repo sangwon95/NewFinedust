@@ -1,15 +1,13 @@
 package com.tobie.newfinedust.service
 
-import android.content.Context
 import android.content.pm.PackageManager
-import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.tobie.newfinedust.MainActivity
+import com.tobie.newfinedust.activity.HomeActivity
 
 class Permission(
-    private val mainActivity: MainActivity,
+    private val homeActivity: HomeActivity,
     private val getLocation: () -> Unit,
     private val keepNegativeAction: () -> Unit
 ) {
@@ -17,14 +15,14 @@ class Permission(
      fun checkPermission() {
          when (PackageManager.PERMISSION_GRANTED) {
              ContextCompat.checkSelfPermission(
-                 mainActivity,
+                 homeActivity,
                  android.Manifest.permission.ACCESS_FINE_LOCATION
              ) -> {
                  // 위치 권한이 허용되어 있는 경우
                  getLocation()
              }
              ContextCompat.checkSelfPermission(
-                 mainActivity,
+                 homeActivity,
                  android.Manifest.permission.ACCESS_COARSE_LOCATION
              ) -> {
                  // 위치 권한이 허용되어 있는 경우
@@ -49,7 +47,7 @@ class Permission(
      * 외부 저장소 읽기 퍼미션에 대한 교육용 다이얼로그
      */
     private fun showPermissionInfoDialog(){
-        AlertDialog.Builder(mainActivity).apply {
+        AlertDialog.Builder(homeActivity).apply {
             setMessage("현재위치를 가져오기 위해서, 위치 권한이 필요합니다.")
             setNegativeButton("취소") { _, _ ->
                 keepNegativeAction()
@@ -65,8 +63,8 @@ class Permission(
      */
     private fun requestAccessFineLocation() {
         ActivityCompat.requestPermissions(
-            mainActivity, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-            MainActivity.LOCATION_PERMISSION_REQUEST_CODE
+            homeActivity, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+            HomeActivity.LOCATION_PERMISSION_REQUEST_CODE
         )
     }
 

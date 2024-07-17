@@ -11,8 +11,8 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.tobie.newfinedust.MainActivity
 import com.tobie.newfinedust.R
+import com.tobie.newfinedust.activity.HomeActivity
 import com.tobie.newfinedust.databinding.ItemViewBinding
 import com.tobie.newfinedust.models.*
 import com.tobie.newfinedust.room.RoomListener
@@ -27,7 +27,7 @@ import java.io.Serializable
 
 class ViewPager2Adapter(
     private var dustCombinedItemList: MutableList<DustCombinedData>,
-    var activity: MainActivity,
+    var activity: HomeActivity,
     private val roomListener: RoomListener,
     private val intentListener: IntentListener,
 ) : RecyclerView.Adapter<ViewPager2Adapter.PagerViewHolder>() {

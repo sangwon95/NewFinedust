@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">NewFinedust</string>
+    <string name="app_name">숨쉴때</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="pm_unit">%1$s %2$s ㎍/m³</string>

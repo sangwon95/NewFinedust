@@ -1,6 +1,7 @@
 package com.tobie.newfinedust.adapter
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,10 +9,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.tobie.newfinedust.databinding.FavoriteListItemBinding
 import com.tobie.newfinedust.models.FavoritesListEventListener
 
-
 class FavoriteAdapter(
     private var addressList: ArrayList<String>,
-    private val favoritesListEventListener: FavoritesListEventListener,
+    private val eventListener: FavoritesListEventListener,
 
 ): RecyclerView.Adapter<FavoriteAdapter.FavoriteViewHolder>() {
 
@@ -32,22 +32,23 @@ class FavoriteAdapter(
     fun removeDataAt(pos: Int) {
         addressList.removeAt(pos)
         notifyItemRemoved(pos)
-        favoritesListEventListener.changedFavoritesListListener(addressList)
+        notifyItemRangeChanged(pos, addressList.size)
+
+        addressList.forEachIndexed { index, value ->
+            Log.d("FavoriteAdapter", "index: $index, value: $value")
+        }
     }
 
-    fun moveItem(fromPosition: Int, toPosition: Int) {
-        val movedItem = addressList.removeAt(fromPosition)
-        addressList.add(toPosition, movedItem)
-        favoritesListEventListener.changedFavoritesListListener(addressList)
-    }
 
     inner class FavoriteViewHolder(private var binding: FavoriteListItemBinding): RecyclerView.ViewHolder(binding.root) {
-        fun bind(address: String, position: Int){
-            if(position == 0){
-                binding.addressTextView.text = "현재 위치: $address"
-                binding.swapImageView.visibility = View.GONE
-            } else {
-                binding.addressTextView.text = address
+        fun bind(address: String, pos: Int) {
+            binding.addressTextView.text = address
+            binding.deleteImageView.setOnClickListener {
+                eventListener.deleteListener(address, pos)
+                Log.d("FavoriteAdapter", "address: ${address}, pos: $pos")
+            }
+            binding.favoriteListItemLayout.setOnClickListener {
+                eventListener.selectListener(addressList[pos])
             }
         }
     }

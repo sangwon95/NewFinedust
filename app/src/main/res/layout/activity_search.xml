@@ -3,21 +3,34 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/white"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".SearchActivity">
 
+    <ImageView
+        android:id="@+id/backImageView"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="12dp"
+        android:padding="3dp"
+        android:src="@drawable/baseline_arrow_back_24"
+        app:layout_constraintBottom_toTopOf="@+id/recycler_search"
+        app:layout_constraintEnd_toStartOf="@+id/edit_searchbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.575" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/edit_searchbar"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginHorizontal="20dp"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:layout_marginHorizontal="15dp"
         android:layout_marginVertical="15dp"
         android:background="@drawable/search_edit_text_background"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/backImageView"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0">
 
@@ -25,27 +38,27 @@
             android:id="@+id/search_image"
             android:layout_width="25dp"
             android:layout_height="25dp"
-            android:src="@drawable/baseline_arrow_back_24"
             android:layout_marginStart="10dp"
-
+            android:src="@drawable/search_icon"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.476"
-            />
+            app:layout_constraintVertical_bias="0.476" />
 
         <EditText
             android:id="@+id/search_edit"
             android:layout_width="250dp"
             android:layout_height="30dp"
+            android:layout_marginStart="15dp"
             android:background="@android:color/transparent"
-            android:hint="읍/동/면을 입력해주세요."
+            android:hint="읍/면/동을 입력해주세요"
+            android:textColorHint="@color/gray_text"
             android:imeOptions="actionSearch"
             android:inputType="text"
-            android:textSize="15sp"
-            android:layout_marginStart="15dp"
-            app:layout_constraintStart_toEndOf="@+id/search_image"
+            android:textSize="14sp"
+            android:textCursorDrawable="@drawable/cursor_drawable"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/search_image"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.466"
             tools:layout_editor_absoluteX="36dp" />

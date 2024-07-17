@@ -9,12 +9,12 @@ properties.load(project.rootProject.file('local.properties').newDataInputStream(
 
 android {
     namespace 'com.tobie.newfinedust'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.tobie.newfinedust"
         minSdk 24
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -43,9 +43,15 @@ android {
     viewBinding {
         enabled true
     }
+    buildToolsVersion '34.0.0'
 }
 
 dependencies {
+    // splash screen
+    implementation "androidx.core:core-splashscreen:1.0.0"
+
+    // swiperefreshl
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
     // room database
     def room_version = "2.5.0"
@@ -68,9 +74,10 @@ dependencies {
     // neumorphism deign
     implementation 'com.github.fornewid:neumorphism:0.2.1'
     implementation 'com.github.sshadkany:Android_neumorphic:1.2.0'
-
     implementation 'com.github.Dimezis:BlurView:version-2.0.3'
 
+    implementation 'androidx.activity:activity-ktx:1.1.0'
+    implementation 'androidx.fragment:fragment-ktx:1.2.5'
     implementation 'androidx.core:core-ktx:1.10.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'

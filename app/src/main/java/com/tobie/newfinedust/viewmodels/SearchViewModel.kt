@@ -13,9 +13,6 @@ class SearchViewModel constructor(private val repository: SearchRepository) : Vi
     companion object {
         const val TAG = "SearchViewModel - 로그"
     }
-    init {
-        Log.d(MainViewModel.TAG, "생성자 호출");
-    }
 
     private var job: Job? = null
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -39,25 +36,25 @@ class SearchViewModel constructor(private val repository: SearchRepository) : Vi
         job = viewModelScope.launch {
             try {
                 val subAddressRequestData = SubAddressRequestData(attrfilter = "emd_kor_nm:like:${inputText}")
-                val responseAddr = async { repository.getSubAddress(subAddressRequestData) } //읍면동 주소 검색
+                val responseAddr = async { repository.getSubAddress(subAddressRequestData) } // 읍면동 주소 검색
                 val isResponse = responseAddr.await().isSuccessful
 
                 withContext(Dispatchers.IO + exceptionHandler) {
                     if (isResponse) {
                         //_dustCombinedData.postValue(dustCombinedData)
-                        Log.d(TAG, responseAddr.await().body().toString())
+                        Log.d(TAG, "!!"+responseAddr.await().body().toString())
                         _featuresValue.postValue(responseAddr.await().body()!!.response.result.featureCollection.features)
 
                         loading.postValue(false)
                     } else {
-                        Log.d(MainViewModel.TAG + "Error", "미세먼지 정보, 예보를 불러오지 못했습니다.")
+                        Log.d(TAG + "Error", "미세먼지 정보, 예보를 불러오지 못했습니다.")
                         onError("미세먼지 정보, 예보를 불러오지 못했습니다.")
                     }
                 }
             }
             catch (e: Exception) {
                 _errorValue.postValue(false)
-                Log.e(MainViewModel.TAG + "Exception Error:", e.toString())
+                Log.e(TAG + "Exception Error:", e.toString())
                 // Show AlertDialog..
             }
         }

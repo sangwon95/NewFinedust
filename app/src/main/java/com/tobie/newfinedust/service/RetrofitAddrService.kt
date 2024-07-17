@@ -35,8 +35,9 @@ interface RetrofitAddrService {
 
     /**
      * 읍/면/동 주소 가져오기
+     * API Key 25.01.07 만료
      */
-    @GET("/req/data?key=${BuildConfig.VWORLD_API_KEY}")
+    @GET("/req/data?key=33E732FA-A77F-3B89-9831-72A44927B0C3")
     suspend fun getSubAddress(
         @Query("request") request: String,
         @Query("format") format: String,

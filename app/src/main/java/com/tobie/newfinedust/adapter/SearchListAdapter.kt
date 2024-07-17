@@ -14,6 +14,7 @@ import com.tobie.newfinedust.models.AddressData
 import com.tobie.newfinedust.models.DustCombinedData
 import com.tobie.newfinedust.models.Feature
 import com.tobie.newfinedust.models.FeatureCollection
+import com.tobie.newfinedust.utils.Etc
 
 class SearchListAdapter(
     addressItemList: ArrayList<Feature>,
@@ -38,10 +39,10 @@ class SearchListAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = dataList[position]
-        holder.addressText.text = item.properties.full_nm
+        holder.addressText.text = Etc().addSpaceAfterCityName(item.properties.full_nm)
 
         holder.searchItemView.setOnClickListener {
-            selectedItemListener.getAddress(item.properties.full_nm)
+            selectedItemListener.getAddress(Etc().addSpaceAfterCityName(item.properties.full_nm))
         }
     }
 

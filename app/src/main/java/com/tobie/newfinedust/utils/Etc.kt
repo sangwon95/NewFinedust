@@ -3,7 +3,7 @@ package com.tobie.newfinedust.utils
 import android.location.Address
 import android.util.Log
 import com.tobie.newfinedust.R
-import com.tobie.newfinedust.viewmodels.MainViewModel
+import com.tobie.newfinedust.activity.HomeActivity
 import kotlin.math.max
 
 class Etc {
@@ -16,23 +16,43 @@ class Etc {
              var returnAddress = ""
 
                 for(value in addressList){
-                    Log.d(MainViewModel.TAG, value.toString())
+                    Log.d(HomeActivity.TAG, value.toString())
 
-                    // thoroughfare=null 경우 도로명주소가 나온경우이다.
+                    // thoroughfare=null 경우 도로명주소가 나온경우이다.그
                     // umdName 규격상 구도로 주소명을 넣어야된다.
-                    if(value.thoroughfare != null){
+                    if(value.countryCode == "KR"){
                         val address = value.getAddressLine(0).split(" ")
 
+                        Log.d("TAG - 로그", "address: $address")
                         // sub-admin ex) (구)가 포함된 주소는 index:4번째 까지 포함해야된다.
                         // ex) 충청북도 청주시 흥덕구 가경동
-                        returnAddress = if(address[4].contains("동")){
-                            "${address[1]} ${address[2]} ${address[3]} ${address[4]}"
+                        // 면, 읍, 동으로 해야되나?
+                        if(isEndingWithEupMyeonDong(address, 4)){
+                            returnAddress = "${address[1]} ${address[2]} ${address[3]} ${address[4]}"
+                            Log.d("TAG - 로그", "returnAddress: index:4 / $returnAddress")
+                        } else if(isEndingWithEupMyeonDong(address, 3)){
+                            returnAddress = "${address[1]} ${address[2]} ${address[3]}"
+                            Log.d("TAG - 로그", "returnAddress: index:3 / $returnAddress")
                         } else {
-                            "${address[1]} ${address[2]} ${address[3]}"
+                            returnAddress = ""
+                            Log.d("TAG - 로그", "읍 면 동이 없는 주소입니다.")
                         }
+//                        returnAddress = if(address[4].contains("동")){
+//                            "${address[1]} ${address[2]} ${address[3]} ${address[4]}"
+//                        } else {
+//                            "${address[1]} ${address[2]} ${address[3]}"
+//                        }
+                    }
+                    if(returnAddress != ""){
+                        break
                     }
                 }
             return returnAddress
+        }
+
+        private fun isEndingWithEupMyeonDong(address: List<String>, position: Int): Boolean {
+            val element = address[position]
+            return element.endsWith("동") || element.endsWith("읍") || element.endsWith("면")
         }
 
 
@@ -46,8 +66,7 @@ class Etc {
                 in 41 .. 50 -> 2 //보통
                 in 51 .. 75 -> 3 //나쁨
                 in 76 .. 150 -> 4 //매우 나쁨
-                else  // 151이상
-                -> 5 // 최악
+                else  -> 5 // 최악
             }
 
             val pm25Rating = when (pm25) {
@@ -72,17 +91,32 @@ class Etc {
         }
 
         /**
+         * 미세먼지 대기 상태값을 통해 statusBar color 값을 리턴한다.
+         */
+        fun getTextForStatusBarColor(status: String): Int {
+            return when(status) {
+                "측정 불가" -> R.color.statusbar_good_color
+                "좋음" -> R.color.statusbar_good_color
+                "보통" -> R.color.statusbar_normal_color
+                "나쁨" -> R.color.statusbar_verybad_color
+                "매우 나쁨" -> R.color.statusbar_worst_color
+                "최악" -> R.color.statusbar_worst_color
+                else -> R.color.statusbar_good_color
+            }
+        }
+
+        /**
          * 미세먼지 대기 상태값을 통해 컬러 text를 반환한다.
          */
         fun getTextForStatus(status: String): Int {
             return when(status) {
                 "측정 불가" -> R.drawable.ba_gradient_good
                 "좋음" -> R.drawable.ba_gradient_good
-                "보통" -> R.drawable.ba_gradient_good
+                "보통" -> R.drawable.ba_gradient_normal
                 "나쁨" -> R.drawable.ba_gradient_verybad
                 "매우 나쁨" -> R.drawable.ba_gradient_worst
                 "최악" -> R.drawable.ba_gradient_worst
-                else -> R.drawable.ba_gradient_normal
+                else -> R.drawable.ba_gradient_good
             }
         }
 
@@ -160,6 +194,27 @@ class Etc {
             } else {
                 value
             }
+        }
+    }
+
+    /**
+     * 특별자치도를 시로 변경한다.
+     */
+    fun addSpaceAfterCityName(fullNm: String): String {
+        // 특별자치도 이름을 일반 도 이름으로 변경
+        fun replaceSpecialRegions(text: String): String {
+            return text
+                .replace("전북특별자치도", "전라북도")
+                .replace("강원특별자치도", "강원도")
+        }
+
+        // 정규 표현식으로 "시" 뒤에 띄어쓰기가 있는지 확인하고 없으면 추가
+        val regex = Regex("([가-힣]+시)([가-힣])")
+
+        // 먼저 특별자치도 이름을 변경한 후, 시 이름 뒤에 띄어쓰기를 추가
+        val replacedRegions = replaceSpecialRegions(fullNm)
+        return regex.replace(replacedRegions) { matchResult ->
+            "${matchResult.groupValues[1]} ${matchResult.groupValues[2]}"
         }
     }
 }
