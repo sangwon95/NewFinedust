@@ -27,6 +27,7 @@ import com.tobie.newfinedust.room.RegionDatabase
 import com.tobie.newfinedust.service.Permission
 import com.tobie.newfinedust.utils.Etc
 import com.tobie.newfinedust.viewmodels.HomeViewModel
+import kotlin.math.log
 
 /**
  * 홈 화면 액티비티
@@ -43,6 +44,7 @@ class HomeActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
     private var isLocationPermissionGranted: Boolean = false // 변수명 예시: isLocationPermissionGranted
     private lateinit var roomDB: RegionDatabase //Room Database
 
+
     // 주소 리스트 수정 StartActivityForResult
     private val editLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -51,7 +53,7 @@ class HomeActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
 
                 if (selectedAddress != null) {
                     Log.d(TAG, "selectedAddress: $selectedAddress")
-
+                    //viewModel.currentAddress = selectedAddress
                     viewModel.getIntegrated(selectedAddress) // 가져온 주소의 미세먼지 정보 가져오기
                 }
             } else {
@@ -99,31 +101,34 @@ class HomeActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
 
     override fun onResume() {
         super.onResume()
-
-        // 지역 추가하기
-        binding.addImageView.setOnClickListener {
+        binding.addImageView.setOnClickListener { // 지역 추가하기
             Intent(this, SearchActivity::class.java)
                 .putExtra("impossibleBack", true).apply {
                     addLauncher.launch(this)
                 }
         }
 
-        // 즐겨찾기 화면으로 이동
-        binding.editImageView.setOnClickListener {
+        binding.editImageView.setOnClickListener { // 즐겨찾기 화면으로 이동
             editLauncher.launch(Intent(this, FavoritesActivity::class.java))
         }
     }
+
+//    override fun onRestart() {
+//        super.onRestart()
+//        Log.d(TAG, "onRestart() 호출됨");
+//        onRefresh()
+//    }
 
     /**
      * 옵저버 등록
      */
     private fun registerObservers(){
         // 현재 위치기반 주소 수신
-        viewModel.address.observe(this) { gpsAddress ->
-            Log.d(TAG, "가져온 GPS 주소: $gpsAddress")
+        viewModel.tmCoordinates.observe(this) { tmCoordinates ->
+            Log.d(TAG, "가져온 GPS 좌표 및 주소: $tmCoordinates")
 
-            GpsAddrssManager.setAddress(gpsAddress)
-            viewModel.getIntegrated(gpsAddress)
+            GpsAddrssManager.set(tmCoordinates.tmX, tmCoordinates.tmY, tmCoordinates.address)
+            viewModel.getIntegrated(tmCoordinates)
         }
 
         // 미세먼지 데이터 수신
@@ -144,6 +149,7 @@ class HomeActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
 
     private fun setHomeView(dustData: DustCombinedData) {
         binding.loadingLayout.visibility = View.GONE
+        binding.swipeLayout.isRefreshing = false //새로 고침 완료
 
         val pm10Value = dustData.dustItem.pm10Value?.toIntOrNull() ?: 0
         val pm25Value = dustData.dustItem.pm25Value?.toIntOrNull() ?: 0
@@ -238,33 +244,13 @@ class HomeActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
                     addLauncher.launch(this)
                 }
         }
-
-//        Log.i(MainActivity.TAG, "addressList.size: ${addressList.size}")
-//
-//        // Location Permission 미 허용시
-//        // Room 데이터에 저장된 주소값으로 데이터 불러오기
-//        if(addressList.size != 0) {
-//            Log.i(MainActivity.TAG, "addressList.isNotEmpty()")
-//            for (value in addressList) {
-//                getFineDustData(value)
-//            }
-//        }
-//
-//        // Room 데이터에 저장된 주소값이 없을 시
-//        // 지역 추가 화면으로 전환
-//        else {
-//            Log.i(MainActivity.TAG, "firstRunAddLauncher")
-//            Intent(this, SearchActivity::class.java)
-//                .putExtra("impossibleBack", false).apply {
-//                    addLauncher.launch(this)
-//                }
-//        }
     }
 
     override fun onRefresh() {
-       setHomeView(viewModel.dustCombinedData.value!!).also {
-           binding.swipeLayout.isRefreshing = false //새로 고침 완료
-       }
+        viewModel.currentAddress?.let {
+            viewModel.getIntegrated(it)
+            Log.d(TAG, "onRefresh currentAddress: $it")
+        }
     }
 }
 

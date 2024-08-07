@@ -33,7 +33,10 @@ class Etc {
                         } else if(isEndingWithEupMyeonDong(address, 3)){
                             returnAddress = "${address[1]} ${address[2]} ${address[3]}"
                             Log.d("TAG - 로그", "returnAddress: index:3 / $returnAddress")
-                        } else {
+                        } else if(isEndingWithEupMyeonDong(address, 2)){
+                            returnAddress = "${address[2]}"
+                            Log.d("TAG - 로그", "returnAddress: index:3 / $returnAddress")
+                        }  else {
                             returnAddress = ""
                             Log.d("TAG - 로그", "읍 면 동이 없는 주소입니다.")
                         }

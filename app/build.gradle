@@ -52,6 +52,7 @@ dependencies {
 
     // swiperefreshl
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+    implementation files('libs/TransCoord.jar')
 
     // room database
     def room_version = "2.5.0"

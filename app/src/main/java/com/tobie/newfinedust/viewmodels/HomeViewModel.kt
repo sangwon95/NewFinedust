@@ -25,32 +25,28 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
+import kr.hyosang.coordinate.*
 
 class HomeViewModel : ViewModel() {
     private val _dustCombinedData = MutableLiveData<DustCombinedData>()
-    private val _address = MutableLiveData<String>()
+    private val _tmCoordinates = MutableLiveData<TmCoordinates>()
     private val _firstAddress = MutableLiveData<String>()
     private val _addressList = MutableLiveData<List<String>>()
 
     val loading = MutableLiveData<Boolean>()
     val errorMessage = MutableLiveData<String>()
+    var currentAddress: String? = null
 
     val addressList: MutableLiveData<List<String>> = _addressList
     val dustCombinedData: MutableLiveData<DustCombinedData> get() = _dustCombinedData
-    val address: MutableLiveData<String> get() = _address
+    val tmCoordinates: MutableLiveData<TmCoordinates> get() = _tmCoordinates
     val firstAddress: MutableLiveData<String> get() = _firstAddress
 
-    private val currentDateTime: String
-    private val repository: MainRepository
+    private lateinit var currentDateTime: String
+    private val repository: MainRepository = MainRepository(RetrofitAirService.getInstance())
 
     companion object {
-        const val TAG = "HomeViewModel"
-    }
-
-    init {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        currentDateTime = dateFormat.format(Date())
-        repository = MainRepository(RetrofitAirService.getInstance())
+        const val TAG = "HomeViewModel - 로그"
     }
 
     fun addAddress(address: String) {
@@ -63,6 +59,11 @@ class HomeViewModel : ViewModel() {
 
     fun updateAddressList(newList: List<String>) {
         _addressList.postValue(newList)
+    }
+
+   private fun initCurrentDateTime() {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        currentDateTime = dateFormat.format(Date())
     }
 
 
@@ -89,13 +90,17 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun getIntegrated(address: String) {
+    fun getIntegrated(tmCoordinates: TmCoordinates) {
+        currentAddress = tmCoordinates.address
+        Log.d(TAG, "getIntegrated: $currentAddress")
+        initCurrentDateTime()
+
         viewModelScope.launch {
             try {
-                val tmxyResponse = repository.getTmxy(TmxyData(umdName = address))
-                val tmxyItems = tmxyResponse.body()?.response?.body?.tmxyItems ?: throw Exception("TmxyItems not found")
+//                val tmxyResponse = repository.getTmxy(TmxyData(umdName = address))
+//                val tmxyItems = tmxyResponse.body()?.response?.body?.tmxyItems ?: throw Exception("TmxyItems not found")
 
-                val stationResponse = repository.getStation(StationData(tmX = tmxyItems[0].tmX, tmY = tmxyItems[0].tmY))
+                val stationResponse = repository.getStation(StationData(tmX = tmCoordinates.tmX.toString(), tmY = tmCoordinates.tmY.toString()))
                 val stationName = stationResponse.body()?.response?.body?.stationItems?.get(0)?.stationName ?: throw Exception("Station not found")
 
                 val dustResponse = repository.getFineDust(FineDustRequestData(stationName = stationName))
@@ -104,7 +109,7 @@ class HomeViewModel : ViewModel() {
                 val dustItem = dustResponse.body()?.response?.dustBody?.dustItem?.get(0) ?: throw Exception("Dust data not found")
                 val forecastItem = forecastResponse.body()?.response?.forecastBody?.forecastItem?.get(0) ?: throw Exception("Forecast data not found")
 
-                _dustCombinedData.postValue(DustCombinedData(dustItem, forecastItem, address))
+                _dustCombinedData.postValue(DustCombinedData(dustItem, forecastItem, currentAddress))
             } catch (e: Exception) {
                 handleError("Error in getIntegrated: ${e.message}")
             }
@@ -139,7 +144,17 @@ class HomeViewModel : ViewModel() {
 
     private fun getAddressFromLocation(geocoder: Geocoder, latitude: Double, longitude: Double) {
         viewModelScope.launch(Dispatchers.IO) {
+            Log.d(TAG, "getAddressFromLocation: $latitude, $longitude")
             try {
+                // CoordPoint 객체 생성
+                val tmPt = CoordPoint(longitude, latitude)
+                val wgsPt = TransCoord.getTransCoord(
+                    tmPt,
+                    TransCoord.COORD_TYPE_WGS84,
+                    TransCoord.COORD_TYPE_TM
+                )
+
+                Log.i("wgscoor", "tmx: $wgsPt.x tmy: $wgsPt.y")
                 val addressList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     geocoder.getFromLocation(latitude, longitude, 2) ?: emptyList()
                 } else {
@@ -147,8 +162,11 @@ class HomeViewModel : ViewModel() {
                     geocoder.getFromLocation(latitude, longitude, 2) ?: emptyList()
                 }
                 withContext(Dispatchers.Main) {
-                    _address.value = Etc.translationAddress(addressList)
+                    _tmCoordinates.value =
+                        TmCoordinates(wgsPt.x, wgsPt.y, Etc.translationAddress(addressList))
                 }
+
+
             } catch (e: Exception) {
                 handleError("Error getting address: ${e.message}")
             }
