@@ -4,6 +4,9 @@ import android.location.Address
 import android.util.Log
 import com.tobie.newfinedust.R
 import com.tobie.newfinedust.activity.HomeActivity
+import com.tobie.newfinedust.models.TmCoordinates
+import kr.hyosang.coordinate.CoordPoint
+import kr.hyosang.coordinate.TransCoord
 import kotlin.math.max
 
 class Etc {
@@ -198,6 +201,21 @@ class Etc {
                 value
             }
         }
+
+        /**
+         * WGS84 to Tm 좌표 변환
+         */
+        fun convertWGS84ToTM(latitude: Double, longitude: Double, address: String): TmCoordinates {
+            val tmPt = CoordPoint(longitude, latitude)
+            val wgsPt = TransCoord.getTransCoord(
+                tmPt,
+                TransCoord.COORD_TYPE_WGS84,
+                TransCoord.COORD_TYPE_TM
+            )
+            Log.i("wgscoorToTm:", "$address /tmx: ${wgsPt.x} tmy: ${wgsPt.y}")
+            return TmCoordinates(wgsPt.x, wgsPt.y, address)
+        }
+
     }
 
     /**

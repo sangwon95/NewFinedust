@@ -23,6 +23,7 @@ import com.tobie.newfinedust.databinding.ActivityHomeBinding
 import com.tobie.newfinedust.models.DustCombinedData
 import com.tobie.newfinedust.models.GpsAddrssManager
 import com.tobie.newfinedust.models.Remain
+import com.tobie.newfinedust.models.TmCoordinates
 import com.tobie.newfinedust.room.RegionDatabase
 import com.tobie.newfinedust.service.Permission
 import com.tobie.newfinedust.utils.Etc
@@ -49,28 +50,37 @@ class HomeActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
     private val editLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                val selectedAddress = result.data?.getStringExtra("selectedAddress")
+                val address = result.data?.getStringExtra("address")
+                val tmX = result.data?.getDoubleExtra("tmX" , 0.0) //경도
+                val tmY = result.data?.getDoubleExtra("tmY", 0.0) //위도
+                Log.d(TAG, "address: $address / tmX $tmX / tmY: $tmY")
 
-                if (selectedAddress != null) {
-                    Log.d(TAG, "selectedAddress: $selectedAddress")
+                if (address != null && tmX != 0.0 && tmY != 0.0) {
+                    val tmPoint =  TmCoordinates(tmX!!.toDouble(), tmY!!.toDouble(), address)
+                    viewModel.getIntegrated(tmPoint)
                     //viewModel.currentAddress = selectedAddress
-                    viewModel.getIntegrated(selectedAddress) // 가져온 주소의 미세먼지 정보 가져오기
+                    //viewModel.getIntegrated(selectedAddress) // 가져온 주소의 미세먼지 정보 가져오기
                 }
             } else {
                 Log.d(TAG, "RESULT_CANCELED")
             }
         }
 
+
+
     private val addLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                val selectedAddress = result.data?.getStringExtra("selectedAddress")
-                if (selectedAddress != null) {
-                    Log.d(TAG, "selectedAddress: $selectedAddress")
+                val selectedAddress = result.data?.getStringExtra("address")
+                val longitude = result.data?.getStringExtra("x") //경도
+                val latitude = result.data?.getStringExtra("y") //위도
 
-                    viewModel.addAddress(selectedAddress)
-                    viewModel.insertRegion(selectedAddress, roomDB) // RoomDB 저장
-                    viewModel.getIntegrated(selectedAddress) // 가져온 주소의 미세먼지 정보 가져오기
+
+                if (selectedAddress != null) {
+                    val tmPoint = Etc.convertWGS84ToTM(latitude!!.toDouble(),longitude!!.toDouble(), selectedAddress)
+                    Log.d(TAG, "selectedAddress: $selectedAddress / 경도 $longitude / 위도: $latitude")
+                    viewModel.insertRegion(tmPoint, roomDB) // RoomDB 저장
+                    viewModel.getIntegrated(tmPoint) // 가져온 주소의 미세먼지 정보 가져오기
                 }
             } else {
                 Log.d(TAG, "RESULT_CANCELED")
@@ -247,7 +257,7 @@ class HomeActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
     }
 
     override fun onRefresh() {
-        viewModel.currentAddress?.let {
+        viewModel.currentTmCoordinates?.let {
             viewModel.getIntegrated(it)
             Log.d(TAG, "onRefresh currentAddress: $it")
         }

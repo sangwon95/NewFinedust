@@ -8,5 +8,6 @@ data class RegionEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long?,
     val region: String,
-
+    val tmX: String,
+    val tmY: String,
 )

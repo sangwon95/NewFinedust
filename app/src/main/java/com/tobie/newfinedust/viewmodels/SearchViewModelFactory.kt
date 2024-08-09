@@ -2,6 +2,7 @@ package com.tobie.newfinedust.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.tobie.repository.KakaoRepository
 import com.tobie.repository.MainRepository
 import com.tobie.repository.SearchRepository
 
@@ -13,7 +14,7 @@ import com.tobie.repository.SearchRepository
  * ViewModelFactory를 사용하면 ViewModel 객체를 생성하는 로직을 중앙에서 관리할 수 있습니다.
  *  이를 통해 코드 중복을 줄이고 유지보수성을 향상시킬 수 있습니다.
  */
-class SearchViewModelFactory constructor(private val repository: SearchRepository): ViewModelProvider.Factory {
+class SearchViewModelFactory constructor(private val repository: KakaoRepository): ViewModelProvider.Factory {
     companion object {
         const val TAG: String = "SearchViewModelFactory - 로그"
     }

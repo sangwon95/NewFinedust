@@ -18,13 +18,16 @@ import com.tobie.newfinedust.adapter.SearchListAdapter
 import com.tobie.newfinedust.adapter.ViewPager2Adapter
 import com.tobie.newfinedust.databinding.ActivitySearchBinding
 import com.tobie.newfinedust.models.AddressData
+import com.tobie.newfinedust.models.Documents
 import com.tobie.newfinedust.models.DustCombinedData
 import com.tobie.newfinedust.models.Feature
 import com.tobie.newfinedust.models.FeatureCollection
 import com.tobie.newfinedust.service.RetrofitAddrService
+import com.tobie.newfinedust.service.RetrofitKakaoAddrService
 import com.tobie.newfinedust.utils.Etc
 import com.tobie.newfinedust.viewmodels.SearchViewModel
 import com.tobie.newfinedust.viewmodels.SearchViewModelFactory
+import com.tobie.repository.KakaoRepository
 import com.tobie.repository.SearchRepository
 
 /**
@@ -56,7 +59,7 @@ class SearchActivity : AppCompatActivity(), AddressClickListener {
         }
     }
 
-    private var featureList: ArrayList<Feature> = arrayListOf()
+    private var documentsList: ArrayList<Documents> = arrayListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,6 +80,7 @@ class SearchActivity : AppCompatActivity(), AddressClickListener {
         // Search EditText text 모두 지우기
         binding.cancelButton.setOnClickListener {
             binding.searchEdit.text.clear()
+            adapter.clean()
         }
 
         // 뒤로가기 버튼
@@ -95,10 +99,13 @@ class SearchActivity : AppCompatActivity(), AddressClickListener {
     }
 
     private fun initSearchViewModel() {
-        val retrofitAddrService = RetrofitAddrService.getInstance()
-        val searchRepository = SearchRepository(retrofitAddrService)
+        //val retrofitAddrService = RetrofitAddrService.getInstance()
+        //val searchRepository = SearchRepository(retrofitAddrService)
 
-        adapter = SearchListAdapter(featureList, this, this)
+        val retrofitKakaoAddrService = RetrofitKakaoAddrService.getInstance()
+        val kakaoRepository = KakaoRepository(retrofitKakaoAddrService)
+
+        adapter = SearchListAdapter(documentsList, this, this)
         binding.recyclerSearch.adapter = adapter // 어뎁터 생성
 
 //        val dividerItemDecoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
@@ -108,14 +115,14 @@ class SearchActivity : AppCompatActivity(), AddressClickListener {
         // 생성자나 매개변수를 사용하지 않고 MainViewModel 객체를 인스턴스화한다.
         // mainRepository 지정
         viewModel = ViewModelProvider(
-            this, SearchViewModelFactory(searchRepository)
+            this, SearchViewModelFactory(kakaoRepository)
         )[SearchViewModel::class.java]
 
 
-        viewModel.featuresValue.observe(this) {
+        viewModel.documentsValue.observe(this) {
             Log.d(TAG+"테스트", it.toString())
-            featureList = it
-            adapter.update(featureList)
+            documentsList = it
+            adapter.update(documentsList)
             // 리스트 중간선 설정
 //            val dividerItemDecoration = DividerItemDecoration(this, LinearLayout.VERTICAL)
 //            val divider = ContextCompat.getDrawable(this, R.drawable.divider_item_decoration)
@@ -124,16 +131,18 @@ class SearchActivity : AppCompatActivity(), AddressClickListener {
         }
 
         viewModel.errorValue.observe(this) {
-            if(!it && featureList.size != 0){
-                featureList.clear()
+            if(!it && documentsList.size != 0){
+                documentsList.clear()
                 adapter.clean()
             }
         }
     }
 
-    override fun getAddress(address: String) {
+    override fun getAddress(address: String, x: String, y: String) {
         val intent = Intent(this, HomeActivity::class.java).apply {
-            putExtra("selectedAddress", address)
+            putExtra("address", address)
+            putExtra("x", x)
+            putExtra("y", y)
         }
         setResult(RESULT_OK, intent)
         finish()
@@ -147,5 +156,5 @@ class SearchActivity : AppCompatActivity(), AddressClickListener {
 }
 
 interface AddressClickListener {
-    fun getAddress(address: String)
+    fun getAddress(address: String, x: String, y: String)
 }

@@ -16,6 +16,7 @@ import com.tobie.newfinedust.databinding.ActivityFavoritesBinding
 import com.tobie.newfinedust.databinding.CustomAlertDialogBinding
 import com.tobie.newfinedust.models.FavoritesListEventListener
 import com.tobie.newfinedust.models.GpsAddrssManager
+import com.tobie.newfinedust.models.TmCoordinates
 import com.tobie.newfinedust.room.RegionDatabase
 import com.tobie.newfinedust.viewmodels.FavoritesViewModel
 
@@ -53,9 +54,10 @@ class FavoritesActivity : AppCompatActivity(), FavoritesListEventListener {
 //            addressFromHome = receivedAddress
 //        }
 
-        if(GpsAddrssManager.getAddress() != null){
-            "현재위치: ${GpsAddrssManager.getAddress()}".also { binding.gpsTextView.text = it }
-        } else {
+        // GPS Layout visibility 설정
+        GpsAddrssManager.getTmCoordinates()?.let {
+            binding.gpsTextView.text = it.address
+        } ?: run {
             binding.gpsLinearLayout.visibility = View.GONE
         }
     }
@@ -68,7 +70,9 @@ class FavoritesActivity : AppCompatActivity(), FavoritesListEventListener {
         }
 
         binding.gpsLinearLayout.setOnClickListener {
-            selectListener(GpsAddrssManager.getAddress()!!)
+            GpsAddrssManager.getTmCoordinates()?.let {
+                selectListener(it)
+            }
         }
     }
 
@@ -80,19 +84,9 @@ class FavoritesActivity : AppCompatActivity(), FavoritesListEventListener {
     }
 
 
-    private fun setFavoriteAdapter(addressList: ArrayList<String>) {
+    private fun setFavoriteAdapter(addressList: ArrayList<TmCoordinates>) {
         favoriteAdapter = FavoriteAdapter(addressList, this)
         binding.favoriteRecyclerView.adapter = favoriteAdapter
-
-//        val dividerItemDecoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
-//        binding.favoriteRecyclerView.addItemDecoration(dividerItemDecoration)
-
-//        val callback = FavoriteListHelper(favoriteAdapter) { removePosition ->
-//            Log.i(TAG, "removePosition: $removePosition")
-//        }
-//
-//        val touchHelper = ItemTouchHelper(callback)
-//        touchHelper.attachToRecyclerView(binding.favoriteRecyclerView)
     }
 
 
@@ -104,13 +98,15 @@ class FavoritesActivity : AppCompatActivity(), FavoritesListEventListener {
         return true
     }
 
-    override fun deleteListener(address: String, position: Int) {
-        deleteAlert(address, position)
+    override fun deleteListener(tmCoordinates: TmCoordinates, position: Int) {
+        deleteAlert(tmCoordinates, position)
     }
 
-    override fun selectListener(address: String) {
+    override fun selectListener(tmCoordinates: TmCoordinates) {
         val intent = Intent(this, HomeActivity::class.java).apply {
-            putExtra("selectedAddress", address)
+            putExtra("address", tmCoordinates.address)
+            putExtra("tmX", tmCoordinates.tmX)
+            putExtra("tmY", tmCoordinates.tmY)
         }
         setResult(RESULT_OK, intent)
         finish()
@@ -119,11 +115,11 @@ class FavoritesActivity : AppCompatActivity(), FavoritesListEventListener {
     /**
      * 삭제 알림창
      */
-    private fun deleteAlert(address: String, position: Int) {
+    private fun deleteAlert(tmCoordinates: TmCoordinates, position: Int) {
         val dialogBinding: CustomAlertDialogBinding = CustomAlertDialogBinding.inflate(layoutInflater)
         val dialogView = dialogBinding.root
         dialogBinding.alertTitle.text = "즐겨찾기"
-        dialogBinding.alertMessage.text = "\"${address}\"\n삭제 하시겠습니까?"
+        dialogBinding.alertMessage.text = "\"${tmCoordinates.address}\"\n삭제 하시겠습니까?"
 
         val dialog = AlertDialog.Builder(this).apply {
             setView(dialogView)
@@ -132,7 +128,7 @@ class FavoritesActivity : AppCompatActivity(), FavoritesListEventListener {
         // 삭제 버튼
         dialogBinding.positiveButton.setOnClickListener {
             favoriteAdapter.removeDataAt(position)
-            viewModel.deleteAddress(address, roomDB)
+            viewModel.deleteAddress(tmCoordinates, roomDB)
             dialog.dismiss()
         }
 

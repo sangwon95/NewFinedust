@@ -11,17 +11,18 @@ import com.tobie.newfinedust.AddressClickListener
 import com.tobie.newfinedust.R
 import com.tobie.newfinedust.SearchActivity
 import com.tobie.newfinedust.models.AddressData
+import com.tobie.newfinedust.models.Documents
 import com.tobie.newfinedust.models.DustCombinedData
 import com.tobie.newfinedust.models.Feature
 import com.tobie.newfinedust.models.FeatureCollection
 import com.tobie.newfinedust.utils.Etc
 
 class SearchListAdapter(
-    addressItemList: ArrayList<Feature>,
+    documentItemList: ArrayList<Documents> ,
     var context: Context,
     private val selectedItemListener: AddressClickListener
 ) : RecyclerView.Adapter<SearchListAdapter.ViewHolder>() {
-    private var dataList: ArrayList<Feature> = addressItemList
+    private var dataList: ArrayList<Documents> = documentItemList
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view){
         val addressText: TextView = view.findViewById(R.id.tv_searchAddress)
@@ -39,15 +40,17 @@ class SearchListAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = dataList[position]
-        holder.addressText.text = Etc().addSpaceAfterCityName(item.properties.full_nm)
+        holder.addressText.text = Etc().addSpaceAfterCityName(item.address)
+
+        //Etc().addSpaceAfterCityName(item.address)
 
         holder.searchItemView.setOnClickListener {
-            selectedItemListener.getAddress(Etc().addSpaceAfterCityName(item.properties.full_nm))
+            selectedItemListener.getAddress(item.address, item.x, item.y)
         }
     }
 
-    fun update(addressItemList: ArrayList<Feature>) {
-        dataList = addressItemList
+    fun update(documentItemList: ArrayList<Documents>) {
+        dataList = documentItemList
         notifyDataSetChanged()
     }
 

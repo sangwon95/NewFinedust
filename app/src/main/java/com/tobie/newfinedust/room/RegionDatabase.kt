@@ -4,14 +4,15 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [RegionEntity::class], version = 1)
+@Database(entities = [RegionEntity::class], version = 2)
 abstract class RegionDatabase: RoomDatabase() {
     abstract fun regionDAO(): RegionDAO
 
     companion object {
         private var INSTANCE: RegionDatabase? = null
-
         fun getInstance(context: Context) : RegionDatabase? {
             if(INSTANCE == null){
                 synchronized(RegionDatabase::class) {

@@ -5,10 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tobie.newfinedust.models.*
-import com.tobie.repository.SearchRepository
+import com.tobie.repository.KakaoRepository
 import kotlinx.coroutines.*
 
-class SearchViewModel constructor(private val repository: SearchRepository) : ViewModel() {
+class SearchViewModel constructor(private val repository: KakaoRepository) : ViewModel() {
 
     companion object {
         const val TAG = "SearchViewModel - 로그"
@@ -22,10 +22,10 @@ class SearchViewModel constructor(private val repository: SearchRepository) : Vi
     val loading = MutableLiveData<Boolean>()
     val errorMessage = MutableLiveData<String>()
 
-    private val _featuresValue = MutableLiveData<ArrayList<Feature>>()
+    private val _documentsValue = MutableLiveData<ArrayList<Documents>>()
     private val _errorValue = MutableLiveData<Boolean>()
 
-    val featuresValue: MutableLiveData<ArrayList<Feature>> get() = _featuresValue
+    val documentsValue: MutableLiveData<ArrayList<Documents>> get() = _documentsValue
 
     val errorValue: MutableLiveData<Boolean> get() = _errorValue
 
@@ -35,20 +35,20 @@ class SearchViewModel constructor(private val repository: SearchRepository) : Vi
     fun getSubAddress(inputText: String) {
         job = viewModelScope.launch {
             try {
-                val subAddressRequestData = SubAddressRequestData(attrfilter = "emd_kor_nm:like:${inputText}")
-                val responseAddr = async { repository.getSubAddress(subAddressRequestData) } // 읍면동 주소 검색
+                //val subAddressRequestData = SubAddressRequestData(attrfilter = "emd_kor_nm:like:${inputText}")
+                val responseAddr = async { repository.getAddress(inputText) } // 읍면동 주소 검색
                 val isResponse = responseAddr.await().isSuccessful
 
                 withContext(Dispatchers.IO + exceptionHandler) {
                     if (isResponse) {
                         //_dustCombinedData.postValue(dustCombinedData)
                         Log.d(TAG, "!!"+responseAddr.await().body().toString())
-                        _featuresValue.postValue(responseAddr.await().body()!!.response.result.featureCollection.features)
+                        _documentsValue.postValue(responseAddr.await().body()!!.documents)
 
                         loading.postValue(false)
                     } else {
-                        Log.d(TAG + "Error", "미세먼지 정보, 예보를 불러오지 못했습니다.")
-                        onError("미세먼지 정보, 예보를 불러오지 못했습니다.")
+                        Log.d(TAG , "검색하신 주소는 찾을 수가 없습니다..")
+                        onError("검색하신 주소는 찾을 수가 없습니다..")
                     }
                 }
             }

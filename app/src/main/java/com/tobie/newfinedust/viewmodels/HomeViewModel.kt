@@ -30,17 +30,17 @@ import kr.hyosang.coordinate.*
 class HomeViewModel : ViewModel() {
     private val _dustCombinedData = MutableLiveData<DustCombinedData>()
     private val _tmCoordinates = MutableLiveData<TmCoordinates>()
-    private val _firstAddress = MutableLiveData<String>()
+    private val _firstAddress = MutableLiveData<TmCoordinates>()
     private val _addressList = MutableLiveData<List<String>>()
 
-    val loading = MutableLiveData<Boolean>()
-    val errorMessage = MutableLiveData<String>()
-    var currentAddress: String? = null
+    private val loading = MutableLiveData<Boolean>()
+    private val errorMessage = MutableLiveData<String>()
+    var currentTmCoordinates: TmCoordinates? = null
 
     val addressList: MutableLiveData<List<String>> = _addressList
     val dustCombinedData: MutableLiveData<DustCombinedData> get() = _dustCombinedData
     val tmCoordinates: MutableLiveData<TmCoordinates> get() = _tmCoordinates
-    val firstAddress: MutableLiveData<String> get() = _firstAddress
+    val firstAddress: MutableLiveData<TmCoordinates> get() = _firstAddress
 
     private lateinit var currentDateTime: String
     private val repository: MainRepository = MainRepository(RetrofitAirService.getInstance())
@@ -71,19 +71,22 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             val regionDBList = roomDB.regionDAO().getAll()
             if (regionDBList.isNotEmpty()) {
-                firstAddress.postValue(regionDBList[0].region)
+                val tmCoordinatesList = regionDBList.map {
+                    TmCoordinates(it.tmX.toDouble(), it.tmY.toDouble(), it.region)
+                } as ArrayList<TmCoordinates>
+                firstAddress.postValue(tmCoordinatesList[0])
             } else {
                 Log.d(TAG, "getAllRegion: RoomDB에 저장된 주소가 없습니다.")
             }
         }
     }
 
-    fun insertRegion(address: String, roomDB: RegionDatabase) {
+    fun insertRegion(tmPoint: TmCoordinates, roomDB: RegionDatabase) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val region = RegionEntity(null, address)
+                val region = RegionEntity(null, tmPoint.address, tmPoint.tmX.toString(), tmPoint.tmY.toString())
                 roomDB.regionDAO().insert(region)
-                Log.d(TAG, "insertRegion: [ $address ] RoomDB에 저장")
+                Log.d(TAG, "insertRegion: [ $tmPoint.address ] RoomDB에 저장")
             } catch (e: Exception) {
                 Log.e(TAG, "Error inserting region: ${e.message}")
             }
@@ -91,8 +94,8 @@ class HomeViewModel : ViewModel() {
     }
 
     fun getIntegrated(tmCoordinates: TmCoordinates) {
-        currentAddress = tmCoordinates.address
-        Log.d(TAG, "getIntegrated: $currentAddress")
+        currentTmCoordinates = tmCoordinates
+        Log.d(TAG, "getIntegrated: ${currentTmCoordinates?.address} / tmX: ${tmCoordinates.tmX} / tmY: ${tmCoordinates.tmY}")
         initCurrentDateTime()
 
         viewModelScope.launch {
@@ -109,7 +112,7 @@ class HomeViewModel : ViewModel() {
                 val dustItem = dustResponse.body()?.response?.dustBody?.dustItem?.get(0) ?: throw Exception("Dust data not found")
                 val forecastItem = forecastResponse.body()?.response?.forecastBody?.forecastItem?.get(0) ?: throw Exception("Forecast data not found")
 
-                _dustCombinedData.postValue(DustCombinedData(dustItem, forecastItem, currentAddress))
+                _dustCombinedData.postValue(DustCombinedData(dustItem, forecastItem, tmCoordinates.address))
             } catch (e: Exception) {
                 handleError("Error in getIntegrated: ${e.message}")
             }
@@ -146,24 +149,17 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             Log.d(TAG, "getAddressFromLocation: $latitude, $longitude")
             try {
-                // CoordPoint 객체 생성
-                val tmPt = CoordPoint(longitude, latitude)
-                val wgsPt = TransCoord.getTransCoord(
-                    tmPt,
-                    TransCoord.COORD_TYPE_WGS84,
-                    TransCoord.COORD_TYPE_TM
-                )
-
-                Log.i("wgscoor", "tmx: $wgsPt.x tmy: $wgsPt.y")
                 val addressList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     geocoder.getFromLocation(latitude, longitude, 2) ?: emptyList()
                 } else {
                     @Suppress("DEPRECATION")
                     geocoder.getFromLocation(latitude, longitude, 2) ?: emptyList()
                 }
+                //Etc.translationAddress(addressList)
+
                 withContext(Dispatchers.Main) {
                     _tmCoordinates.value =
-                        TmCoordinates(wgsPt.x, wgsPt.y, Etc.translationAddress(addressList))
+                        Etc.convertWGS84ToTM(latitude, longitude, "대전광역시 유성구 송강동")
                 }
 
 

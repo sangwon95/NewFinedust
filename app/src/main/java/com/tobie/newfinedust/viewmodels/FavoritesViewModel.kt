@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.tobie.newfinedust.activity.HomeActivity
+import com.tobie.newfinedust.models.TmCoordinates
 import com.tobie.newfinedust.room.RegionDatabase
 import com.tobie.newfinedust.room.RegionEntity
 import kotlinx.coroutines.CoroutineScope
@@ -17,11 +18,11 @@ class FavoritesViewModel: ViewModel() {
         const val TAG: String = "FavoritesViewModel - 로그"
     }
 
-    private val _addressLiveData = MutableLiveData<ArrayList<String>>()
-    val addressLiveData: MutableLiveData<ArrayList<String>> get() = _addressLiveData
+    private val _addressLiveData = MutableLiveData<ArrayList<TmCoordinates>>()
+    val addressLiveData: MutableLiveData<ArrayList<TmCoordinates>> get() = _addressLiveData
 
     var regionDBList: List<RegionEntity> = ArrayList()
-    var addressList = ArrayList<String>()
+    var tmCoordinatesList = ArrayList<TmCoordinates>()
 
     /**
      * RoomDB에서 가져온 주소를 저장할 리스트
@@ -36,18 +37,20 @@ class FavoritesViewModel: ViewModel() {
             }
 
             for (value in regionDBList) {
-                addressList.add(value.region)
-                Log.d(HomeActivity.TAG, "getAllRegion: RoomDB에서 가져온 주소: ${value.region}")
+                tmCoordinatesList = regionDBList.map {
+                    TmCoordinates(it.tmX.toDouble(), it.tmY.toDouble(), it.region)
+                } as ArrayList<TmCoordinates>
+                Log.d(TAG, "getAllRegion: RoomDB에서 가져온 주소: ${value.region}")
             }
-            addressLiveData.postValue(addressList)
+            addressLiveData.postValue(tmCoordinatesList)
         }.start()
     }
 
     /**
      * RoomDB 주소 삭제
      */
-    fun deleteAddress(address: String, roomDB: RegionDatabase) {
-        val addressToDelete = regionDBList.find { it.region == address }
+    fun deleteAddress(tmCoordinates: TmCoordinates, roomDB: RegionDatabase) {
+        val addressToDelete = regionDBList.find { it.region == tmCoordinates.address }
 
         if(addressToDelete == null){
             Log.d(TAG, "deleteAddress: 삭제할 주소가 없습니다.")

@@ -4,7 +4,6 @@ import com.tobie.newfinedust.models.SubAddressRequestData
 import com.tobie.newfinedust.service.RetrofitAddrService
 
 class SearchRepository constructor(private val retrofitService: RetrofitAddrService) {
-
     //읍면동 주소 가져오기
     suspend fun getSubAddress(subAddressRequestData: SubAddressRequestData)
      = retrofitService.getSubAddress(
@@ -20,5 +19,4 @@ class SearchRepository constructor(private val retrofitService: RetrofitAddrServ
         subAddressRequestData.crs,
         subAddressRequestData.domain,
      )
-
 }

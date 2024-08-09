@@ -9,6 +9,13 @@ object GpsAddrssManager {
         this.tmX = tmX
         this.tmY = tmY
         this.address = address
+    }
 
+    fun getTmCoordinates(): TmCoordinates? {
+        return if(tmX != null && tmY != null && address != null) {
+            TmCoordinates(tmX!!, tmY!!, address!!)
+        } else {
+            null
+        }
     }
 }
