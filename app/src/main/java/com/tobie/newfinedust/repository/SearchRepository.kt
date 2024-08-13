@@ -1,4 +1,4 @@
-package com.tobie.repository
+package com.tobie.newfinedust.repository
 
 import com.tobie.newfinedust.models.SubAddressRequestData
 import com.tobie.newfinedust.service.RetrofitAddrService

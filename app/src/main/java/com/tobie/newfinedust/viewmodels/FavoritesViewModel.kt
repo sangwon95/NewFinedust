@@ -18,17 +18,20 @@ class FavoritesViewModel: ViewModel() {
         const val TAG: String = "FavoritesViewModel - 로그"
     }
 
-    private val _addressLiveData = MutableLiveData<ArrayList<TmCoordinates>>()
-    val addressLiveData: MutableLiveData<ArrayList<TmCoordinates>> get() = _addressLiveData
+    // RoomDB에서 가져온 주소를 저장할 리스트
+    private var regionDBList: List<RegionEntity> = ArrayList()
 
-    var regionDBList: List<RegionEntity> = ArrayList()
-    var tmCoordinatesList = ArrayList<TmCoordinates>()
+    // LiveData 객체 초기화
+    private val _tmCoordinatesLiveData = MutableLiveData<ArrayList<TmCoordinates>>()
+    val tmCoordinatesLiveData: MutableLiveData<ArrayList<TmCoordinates>> get() = _tmCoordinatesLiveData
 
     /**
      * RoomDB에서 가져온 주소를 저장할 리스트
      */
     @SuppressLint("StaticFieldLeak")
     fun getAllRegion(roomDB: RegionDatabase) {
+        var tmCoordinatesList = ArrayList<TmCoordinates>()
+
         CoroutineScope(Dispatchers.IO).launch {
             regionDBList = roomDB.regionDAO().getAll()
 
@@ -42,7 +45,7 @@ class FavoritesViewModel: ViewModel() {
                 } as ArrayList<TmCoordinates>
                 Log.d(TAG, "getAllRegion: RoomDB에서 가져온 주소: ${value.region}")
             }
-            addressLiveData.postValue(tmCoordinatesList)
+            tmCoordinatesLiveData.postValue(tmCoordinatesList)
         }.start()
     }
 

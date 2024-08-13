@@ -1,11 +1,11 @@
-package com.tobie.repository
+package com.tobie.newfinedust.repository
 
 import com.tobie.newfinedust.models.FineDustRequestData
 import com.tobie.newfinedust.models.StationData
 import com.tobie.newfinedust.models.TmxyData
 import com.tobie.newfinedust.service.RetrofitAirService
 
-class MainRepository constructor(private val retrofitService: RetrofitAirService) {
+class HomeRepository(private val retrofitService: RetrofitAirService) {
 
     suspend fun getFineDust(fineDustRequestData: FineDustRequestData)
             = retrofitService.getFineDust(

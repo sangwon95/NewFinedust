@@ -5,50 +5,44 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tobie.newfinedust.models.*
-import com.tobie.repository.KakaoRepository
+import com.tobie.newfinedust.repository.HomeRepository
+import com.tobie.newfinedust.repository.KakaoRepository
+import com.tobie.newfinedust.service.RetrofitAirService
+import com.tobie.newfinedust.service.RetrofitKakaoAddrService
 import kotlinx.coroutines.*
 
-class SearchViewModel constructor(private val repository: KakaoRepository) : ViewModel() {
+class SearchViewModel : ViewModel() {
 
     companion object {
         const val TAG = "SearchViewModel - 로그"
     }
 
-    private var job: Job? = null
-    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        onError("Exception handled: ${throwable.localizedMessage}")
-    }
+    // 홈 리포지토리 인스턴스 생성
+    private val repository: KakaoRepository = KakaoRepository(RetrofitKakaoAddrService.getInstance())
 
-    val loading = MutableLiveData<Boolean>()
-    val errorMessage = MutableLiveData<String>()
-
+    // LiveData 객체 초기화 - 먼지 데이터, TM 좌표, 첫 번째 주소 등
     private val _documentsValue = MutableLiveData<ArrayList<Documents>>()
     private val _errorValue = MutableLiveData<Boolean>()
 
+    // 외부에서 접근 할 수 있는 LiveData Getter
     val documentsValue: MutableLiveData<ArrayList<Documents>> get() = _documentsValue
-
     val errorValue: MutableLiveData<Boolean> get() = _errorValue
 
     /**
      * 에어코리아 API를 통해서 미세먼지 수치(데이터)를 가져온다.
      */
     fun getSubAddress(inputText: String) {
-        job = viewModelScope.launch {
+        viewModelScope.launch {
             try {
-                //val subAddressRequestData = SubAddressRequestData(attrfilter = "emd_kor_nm:like:${inputText}")
-                val responseAddr = async { repository.getAddress(inputText) } // 읍면동 주소 검색
+                val responseAddr = async { repository.getAddress(inputText) }
                 val isResponse = responseAddr.await().isSuccessful
 
-                withContext(Dispatchers.IO + exceptionHandler) {
+                withContext(Dispatchers.IO) {
                     if (isResponse) {
-                        //_dustCombinedData.postValue(dustCombinedData)
                         Log.d(TAG, "!!"+responseAddr.await().body().toString())
                         _documentsValue.postValue(responseAddr.await().body()!!.documents)
-
-                        loading.postValue(false)
                     } else {
                         Log.d(TAG , "검색하신 주소는 찾을 수가 없습니다..")
-                        onError("검색하신 주소는 찾을 수가 없습니다..")
                     }
                 }
             }
@@ -60,8 +54,4 @@ class SearchViewModel constructor(private val repository: KakaoRepository) : Vie
         }
     }
 
-    private fun onError(message: String) {
-        errorMessage.postValue(message)
-        loading.postValue(false)
-    }
 }

@@ -6,18 +6,15 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.tobie.newfinedust.FavoritesActivity
 import com.tobie.newfinedust.R
-import com.tobie.newfinedust.SearchActivity
 import com.tobie.newfinedust.adapter.RemainAdapter
 import com.tobie.newfinedust.databinding.ActivityHomeBinding
 import com.tobie.newfinedust.models.DustCombinedData
@@ -28,7 +25,6 @@ import com.tobie.newfinedust.room.RegionDatabase
 import com.tobie.newfinedust.service.Permission
 import com.tobie.newfinedust.utils.Etc
 import com.tobie.newfinedust.viewmodels.HomeViewModel
-import kotlin.math.log
 
 /**
  * 홈 화면 액티비티
@@ -38,6 +34,7 @@ class HomeActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
         const val TAG = "HomeAcitivity - 로그"
         const val LOCATION_PERMISSION_REQUEST_CODE = 100 // 위치 권한 요청 코드
     }
+
     private lateinit var splashScreen: SplashScreen
     private lateinit var binding: ActivityHomeBinding
     private val viewModel: HomeViewModel by viewModels()
@@ -45,47 +42,9 @@ class HomeActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
     private var isLocationPermissionGranted: Boolean = false // 변수명 예시: isLocationPermissionGranted
     private lateinit var roomDB: RegionDatabase //Room Database
 
+    private lateinit var favoritesAddressLauncher : ActivityResultLauncher<Intent>
+    private lateinit var searchAddressLauncher : ActivityResultLauncher<Intent>
 
-    // 주소 리스트 수정 StartActivityForResult
-    private val editLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                val address = result.data?.getStringExtra("address")
-                val tmX = result.data?.getDoubleExtra("tmX" , 0.0) //경도
-                val tmY = result.data?.getDoubleExtra("tmY", 0.0) //위도
-                Log.d(TAG, "address: $address / tmX $tmX / tmY: $tmY")
-
-                if (address != null && tmX != 0.0 && tmY != 0.0) {
-                    val tmPoint =  TmCoordinates(tmX!!.toDouble(), tmY!!.toDouble(), address)
-                    viewModel.getIntegrated(tmPoint)
-                    //viewModel.currentAddress = selectedAddress
-                    //viewModel.getIntegrated(selectedAddress) // 가져온 주소의 미세먼지 정보 가져오기
-                }
-            } else {
-                Log.d(TAG, "RESULT_CANCELED")
-            }
-        }
-
-
-
-    private val addLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                val selectedAddress = result.data?.getStringExtra("address")
-                val longitude = result.data?.getStringExtra("x") //경도
-                val latitude = result.data?.getStringExtra("y") //위도
-
-
-                if (selectedAddress != null) {
-                    val tmPoint = Etc.convertWGS84ToTM(latitude!!.toDouble(),longitude!!.toDouble(), selectedAddress)
-                    Log.d(TAG, "selectedAddress: $selectedAddress / 경도 $longitude / 위도: $latitude")
-                    viewModel.insertRegion(tmPoint, roomDB) // RoomDB 저장
-                    viewModel.getIntegrated(tmPoint) // 가져온 주소의 미세먼지 정보 가져오기
-                }
-            } else {
-                Log.d(TAG, "RESULT_CANCELED")
-            }
-        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,17 +54,34 @@ class HomeActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
             setContentView(root)
         }
 
-        Permission(this,{ // 위치 권한이 허용되었을 때 수행할 작업
+        // 위치 권한이 허용되었을 때 수행할 작업
+        Permission(this,{
             isLocationPermissionGranted = true
             viewModel.getLocation(this, this)
-        },{ // 계속 위치권한 거절했을 때 수행할 작업
-            handleLocationPermissionDenied()
+        },{
+            handleLocationPermissionDenied() // 계속 위치권한 거절했을 때 수행할 작업
         }).checkPermission()
 
-        roomDB = RegionDatabase.getInstance(this)!! //Room Database 초기화
+        // Room Database 초기화
+        roomDB = RegionDatabase.getInstance(this)!!
+
+        // local db에 저장된 첫번째 주소 조회
         viewModel.getFirstRegion(roomDB)
 
+        // 옵저버 등록
         registerObservers()
+
+        // 즐겨찾기, 주소 추가 ActivityResultLauncher 초기화
+        favoritesAddressLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            Log.d(TAG, "즐겨찾기 화면에서 돌아옴")
+            viewModel.handleActivityResult(result, isSearch = false, roomDB)
+        }
+        searchAddressLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            Log.d(TAG, "주소 추가 화면에서 돌아옴")
+            viewModel.handleActivityResult(result, isSearch = true, roomDB)
+        }
+
+        // 새로고침 리스너
         binding.swipeLayout.setOnRefreshListener(this)
     }
 
@@ -114,31 +90,30 @@ class HomeActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
         binding.addImageView.setOnClickListener { // 지역 추가하기
             Intent(this, SearchActivity::class.java)
                 .putExtra("impossibleBack", true).apply {
-                    addLauncher.launch(this)
+                    searchAddressLauncher.launch(this)
                 }
         }
 
-        binding.editImageView.setOnClickListener { // 즐겨찾기 화면으로 이동
-            editLauncher.launch(Intent(this, FavoritesActivity::class.java))
+        binding.favoriteImageView.setOnClickListener { // 즐겨찾기 화면으로 이동
+            favoritesAddressLauncher.launch(Intent(this, FavoritesActivity::class.java))
         }
     }
 
-//    override fun onRestart() {
-//        super.onRestart()
-//        Log.d(TAG, "onRestart() 호출됨");
-//        onRefresh()
-//    }
-
     /**
-     * 옵저버 등록
+     * viewModel 옵저버 등록
      */
     private fun registerObservers(){
         // 현재 위치기반 주소 수신
         viewModel.tmCoordinates.observe(this) { tmCoordinates ->
             Log.d(TAG, "가져온 GPS 좌표 및 주소: $tmCoordinates")
 
-            GpsAddrssManager.set(tmCoordinates.tmX, tmCoordinates.tmY, tmCoordinates.address)
-            viewModel.getIntegrated(tmCoordinates)
+            if(tmCoordinates.address == "알 수 없음") {
+                binding.loadingMessageTextView.text = "현재 위치하신곳은 서비스를 제공하고 있지 않습니다."
+            } else {
+                GpsAddrssManager.set(tmCoordinates.tmX, tmCoordinates.tmY, tmCoordinates.address)
+                viewModel.getIntegrated(tmCoordinates)
+            }
+
         }
 
         // 미세먼지 데이터 수신
@@ -146,72 +121,89 @@ class HomeActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
             Log.i(TAG, "화면에 보여줄 미세먼지 데이터 결과:$it")
             setHomeView(it)
         }
-
-        // RoomDB에서 가져온 첫번째 주소
-//        viewModel.firstAddress.observe(this){
-//            Log.i(TAG, "RoomDB에서 가져온 첫번째 주소: $it")
-//            if(it != null){
-//                viewModel.getIntegrated(it)
-//            }
-//        }
-
     }
 
-    private fun setHomeView(dustData: DustCombinedData) {
-        binding.loadingLayout.visibility = View.GONE
-        binding.swipeLayout.isRefreshing = false //새로 고침 완료
 
+    /**
+     * 홈 화면 뷰 설정
+     */
+    private fun setHomeView(dustData: DustCombinedData) {
+       // hideLoading
+        binding.loadingLayout.visibility = View.GONE
+        binding.swipeLayout.isRefreshing = false
+
+        updateAirQualityInfo(dustData)
+        updateBackgroundAndStatusBar(dustData)
+        setupRemainDataRecyclerView(dustData)
+        updateForecastInfo(dustData)
+    }
+
+    /**
+     * 미세먼지 정보 업데이트
+     */
+    private fun updateAirQualityInfo(dustData: DustCombinedData) {
         val pm10Value = dustData.dustItem.pm10Value?.toIntOrNull() ?: 0
         val pm25Value = dustData.dustItem.pm25Value?.toIntOrNull() ?: 0
-        val dateTime = dustData.dustItem.dataTime?: "-"
+        val dateTime = dustData.dustItem.dataTime ?: "-"
         val txtState = Etc.calculateAtmosphericEnvironment(pm10Value, pm25Value)
 
-        window.apply {
-            statusBarColor = ContextCompat.getColor(this@HomeActivity, Etc.getTextForStatusBarColor(txtState))
-        }
-        binding.mainFrame.setBackgroundResource(Etc.getTextForStatus(txtState)) // background color
-        binding.mainImageView.setImageDrawable(ContextCompat.getDrawable(this, Etc.getTextForStatusIconImage(txtState)))
-        binding.pm10TextView.text = this.getString(R.string.pm_unit, "미세먼지", pm10Value.toString())
-        binding.pm25TextView.text = this.getString(R.string.pm_unit, "초 미세먼지", pm25Value.toString())
+        binding.pm10TextView.text = getString(R.string.pm_unit, "미세먼지", pm10Value.toString())
+        binding.pm25TextView.text = getString(R.string.pm_unit, "초 미세먼지", pm25Value.toString())
         binding.dateTimeTextView.text = dateTime
         binding.addressTextView.text = dustData.address
         binding.stateTextView.text = txtState
+    }
 
-        val no2Value = dustData.dustItem.no2Value ?: "-"
-        val o3Value = dustData.dustItem.o3Value ?: "-"
-        val coValue = dustData.dustItem.coValue ?: "-"
-        val so2Value = dustData.dustItem.so2Value ?: "-"
-
-        val remainData: ArrayList<Remain> = arrayListOf(
-            Remain("이산화 질소", Etc.getNo2ValueAirQualityLevel(no2Value), "$no2Value ppm", Etc.getTextForStatusIconImage(
-                Etc.getNo2ValueAirQualityLevel(no2Value)
-            )
-            ),
-            Remain("오존", Etc.getO3GradeAirQualityLevel(o3Value), "$o3Value ppm", Etc.getTextForStatusIconImage(
-                Etc.getO3GradeAirQualityLevel(o3Value)
-            )
-            ),
-            Remain("일산화탄소", Etc.getCoValueAirQualityLevel(coValue), "$coValue ppm", Etc.getTextForStatusIconImage(
-                Etc.getCoValueAirQualityLevel(coValue)
-            )
-            ),
-            Remain("이황산가스", Etc.getSo2ValueAirQualityLevel(so2Value), "$so2Value ppm", Etc.getTextForStatusIconImage(
-                Etc.getSo2ValueAirQualityLevel(so2Value)
-            )
-            ),
+    /**
+     * 배경 및 상태바 업데이트
+     */
+    private fun updateBackgroundAndStatusBar(dustData: DustCombinedData) {
+        val txtState = Etc.calculateAtmosphericEnvironment(
+            dustData.dustItem.pm10Value?.toIntOrNull() ?: 0,
+            dustData.dustItem.pm25Value?.toIntOrNull() ?: 0
         )
+
+        window.statusBarColor = ContextCompat.getColor(this, Etc.getTextForStatusBarColor(txtState))
+        binding.mainFrame.setBackgroundResource(Etc.getTextForStatus(txtState))
+        binding.mainImageView.setImageDrawable(ContextCompat.getDrawable(this, Etc.getTextForStatusIconImage(txtState)))
+    }
+
+    /**
+     * 남은 데이터 리사이클러뷰 설정
+     * 이산화질소, 오존, 일산화탄소, 이황산가스
+     */
+    private fun setupRemainDataRecyclerView(dustData: DustCombinedData) {
+        val remainData = arrayListOf(
+            createRemainItem("이산화 질소", dustData.dustItem.no2Value ?: "-", Etc::getNo2ValueAirQualityLevel),
+            createRemainItem("오존", dustData.dustItem.o3Value ?: "-", Etc::getO3GradeAirQualityLevel),
+            createRemainItem("일산화탄소", dustData.dustItem.coValue ?: "-", Etc::getCoValueAirQualityLevel),
+            createRemainItem("이황산가스", dustData.dustItem.so2Value ?: "-", Etc::getSo2ValueAirQualityLevel)
+        )
+
         Log.d(TAG, "remainData: $remainData")
-        val remainAdapter = RemainAdapter(remainData)
-        binding.recyclerView.adapter = remainAdapter
-        binding.recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false) // 가로 정렬
+        binding.recyclerView.adapter = RemainAdapter(remainData)
+        binding.recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+    }
 
+    /**
+     * 남은 데이터 아이템 생성
+     * 이산화질소, 오존, 일산화탄소, 이황산가스
+     */
+    private fun createRemainItem(name: String, value: String, levelFunction: (String) -> String): Remain {
+        val level = levelFunction(value)
+        return Remain(name, level, "$value ppm", Etc.getTextForStatusIconImage(level))
+    }
 
-        // 미세먼지 예보 정보
-        val date = dustData.forecastItem.informData
-        val informCause = dustData.forecastItem.informCause
-        val informOverall = dustData.forecastItem.informOverall
-        binding.forecastDateTextView.text = date
-        binding.forecastContentTextView.text = this.getString(R.string.forecast_unit, informCause, informOverall)
+    /**
+     * 미세먼지 예보 정보 업데이트
+     */
+    private fun updateForecastInfo(dustData: DustCombinedData) {
+        binding.forecastDateTextView.text = dustData.forecastItem.informData
+        binding.forecastContentTextView.text = getString(
+            R.string.forecast_unit,
+            dustData.forecastItem.informCause,
+            dustData.forecastItem.informOverall
+        )
     }
 
     /**
@@ -223,7 +215,7 @@ class HomeActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
         grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
+        when(requestCode) {
             LOCATION_PERMISSION_REQUEST_CODE -> {
                 val resultCode = grantResults.firstOrNull() ?: PackageManager.PERMISSION_DENIED
                 if (resultCode == PackageManager.PERMISSION_GRANTED) {
@@ -251,11 +243,14 @@ class HomeActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
             Log.i(TAG, "첫번째 주소가 없습니다.")
                 Intent(this, SearchActivity::class.java)
                     .putExtra("impossibleBack", false).apply {
-                    addLauncher.launch(this)
+                        searchAddressLauncher.launch(this)
                 }
         }
     }
 
+    /**
+     * 새로고침 리스너
+     */
     override fun onRefresh() {
         viewModel.currentTmCoordinates?.let {
             viewModel.getIntegrated(it)

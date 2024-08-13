@@ -7,20 +7,15 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
-import com.tobie.newfinedust.AddressClickListener
 import com.tobie.newfinedust.R
-import com.tobie.newfinedust.SearchActivity
-import com.tobie.newfinedust.models.AddressData
 import com.tobie.newfinedust.models.Documents
-import com.tobie.newfinedust.models.DustCombinedData
-import com.tobie.newfinedust.models.Feature
-import com.tobie.newfinedust.models.FeatureCollection
+import com.tobie.newfinedust.models.listener.SearchItemClickListener
 import com.tobie.newfinedust.utils.Etc
 
 class SearchListAdapter(
     documentItemList: ArrayList<Documents> ,
     var context: Context,
-    private val selectedItemListener: AddressClickListener
+    private val selectedItemListener: SearchItemClickListener
 ) : RecyclerView.Adapter<SearchListAdapter.ViewHolder>() {
     private var dataList: ArrayList<Documents> = documentItemList
 

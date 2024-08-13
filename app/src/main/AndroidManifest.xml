@@ -28,10 +28,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".FavoritesActivity"
+            android:name=".activity.FavoritesActivity"
             android:exported="false" />
         <activity
-            android:name=".SearchActivity"
+            android:name=".activity.SearchActivity"
             android:exported="false" />
 
         <service

@@ -15,13 +15,13 @@ android {
         applicationId "com.tobie.newfinedust"
         minSdk 24
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
-
+        versionCode 2
+        versionName "1.0.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField "String", "AIR_API_KEY", properties['api.key.airkorea']
         buildConfigField "String", "VWORLD_API_KEY", properties['api.key.vworld']
+        buildConfigField "String", "KAKAO_API_KEY", properties['api.key.kakao']
     }
 
     buildTypes {

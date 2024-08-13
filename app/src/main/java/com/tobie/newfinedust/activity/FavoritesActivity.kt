@@ -1,20 +1,17 @@
-package com.tobie.newfinedust
+package com.tobie.newfinedust.activity
 
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AnimationUtils
-import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.tobie.newfinedust.activity.HomeActivity
 import com.tobie.newfinedust.adapter.FavoriteAdapter
 import com.tobie.newfinedust.databinding.ActivityFavoritesBinding
 import com.tobie.newfinedust.databinding.CustomAlertDialogBinding
-import com.tobie.newfinedust.models.FavoritesListEventListener
+import com.tobie.newfinedust.models.listener.FavoritesListEventListener
 import com.tobie.newfinedust.models.GpsAddrssManager
 import com.tobie.newfinedust.models.TmCoordinates
 import com.tobie.newfinedust.room.RegionDatabase
@@ -25,19 +22,16 @@ import com.tobie.newfinedust.viewmodels.FavoritesViewModel
  * 즐겨찾기 화면
  */
 class FavoritesActivity : AppCompatActivity(), FavoritesListEventListener {
-
     companion object {
         const val TAG: String = "FavoritesActivity - 로그"
     }
+
     private lateinit var binding: ActivityFavoritesBinding
-    private  var favoritesAddressList = arrayListOf<String>()
-    private  var updatedFavoritesAddressList: ArrayList<String>? = null
     private lateinit var favoriteAdapter: FavoriteAdapter
 
     private lateinit var roomDB: RegionDatabase //Room Database
     private val viewModel: FavoritesViewModel by viewModels()
 
-    private var addressFromHome: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,11 +42,6 @@ class FavoritesActivity : AppCompatActivity(), FavoritesListEventListener {
 
         roomDB = RegionDatabase.getInstance(this)!! //Room Database 초기화
         viewModel.getAllRegion(roomDB)
-
-//        val receivedAddress: String? = intent.getStringExtra("NotGpsAddress")
-//        if (receivedAddress != null) {
-//            addressFromHome = receivedAddress
-//        }
 
         // GPS Layout visibility 설정
         GpsAddrssManager.getTmCoordinates()?.let {
@@ -76,22 +65,30 @@ class FavoritesActivity : AppCompatActivity(), FavoritesListEventListener {
         }
     }
 
+    /**
+     * FavoritesViewModel 옵저버 등록
+     */
     private fun registerObservers() {
-        viewModel.addressLiveData.observe(this) {
+        viewModel.tmCoordinatesLiveData.observe(this) {
             Log.d(TAG, "registerObservers: RoomDB에서 가져온 주소 리스트: $it")
             setFavoriteAdapter(it)
         }
     }
 
 
+    /**
+     * 즐겨찾기 어댑터 설정
+     */
     private fun setFavoriteAdapter(addressList: ArrayList<TmCoordinates>) {
         favoriteAdapter = FavoriteAdapter(addressList, this)
         binding.favoriteRecyclerView.adapter = favoriteAdapter
     }
 
 
-    // onSupportNavigateUp() 메서드를 오버라이드하여
-    // 뒤로가기 버튼을 눌렀을 때 동작을 정의
+    /**
+     * onSupportNavigateUp() 메서드를 오버라이드하여
+     * 뒤로가기 버튼을 눌렀을 때 동작을 정의
+     */
     override fun onSupportNavigateUp(): Boolean {
         @Suppress("DEPRECATION")
         onBackPressed()
@@ -113,7 +110,7 @@ class FavoritesActivity : AppCompatActivity(), FavoritesListEventListener {
     }
 
     /**
-     * 삭제 알림창
+     * 주소 삭제 알림창
      */
     private fun deleteAlert(tmCoordinates: TmCoordinates, position: Int) {
         val dialogBinding: CustomAlertDialogBinding = CustomAlertDialogBinding.inflate(layoutInflater)
@@ -143,6 +140,4 @@ class FavoritesActivity : AppCompatActivity(), FavoritesListEventListener {
         dialog.window?.setLayout(750, ViewGroup.LayoutParams.WRAP_CONTENT) // 너비를 600dp로 설정
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
     }
-
-
 }

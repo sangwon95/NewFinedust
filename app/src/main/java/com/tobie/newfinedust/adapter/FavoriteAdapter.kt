@@ -3,11 +3,10 @@ package com.tobie.newfinedust.adapter
 import android.content.Context
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.tobie.newfinedust.databinding.FavoriteListItemBinding
-import com.tobie.newfinedust.models.FavoritesListEventListener
+import com.tobie.newfinedust.models.listener.FavoritesListEventListener
 import com.tobie.newfinedust.models.TmCoordinates
 
 class FavoriteAdapter(

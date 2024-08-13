@@ -16,20 +16,13 @@ class Etc {
          * 정확한 주소를 추출한다.
          */
         fun translationAddress (addressList: List<Address>) : String {
-             var returnAddress = ""
+             var returnAddress = "알 수 없음"
 
                 for(value in addressList){
                     Log.d(HomeActivity.TAG, value.toString())
-
-                    // thoroughfare=null 경우 도로명주소가 나온경우이다.그
-                    // umdName 규격상 구도로 주소명을 넣어야된다.
                     if(value.countryCode == "KR"){
                         val address = value.getAddressLine(0).split(" ")
 
-                        Log.d("TAG - 로그", "address: $address")
-                        // sub-admin ex) (구)가 포함된 주소는 index:4번째 까지 포함해야된다.
-                        // ex) 충청북도 청주시 흥덕구 가경동
-                        // 면, 읍, 동으로 해야되나?
                         if(isEndingWithEupMyeonDong(address, 4)){
                             returnAddress = "${address[1]} ${address[2]} ${address[3]} ${address[4]}"
                             Log.d("TAG - 로그", "returnAddress: index:4 / $returnAddress")
@@ -37,17 +30,12 @@ class Etc {
                             returnAddress = "${address[1]} ${address[2]} ${address[3]}"
                             Log.d("TAG - 로그", "returnAddress: index:3 / $returnAddress")
                         } else if(isEndingWithEupMyeonDong(address, 2)){
-                            returnAddress = "${address[2]}"
-                            Log.d("TAG - 로그", "returnAddress: index:3 / $returnAddress")
+                            returnAddress = "${address[1]} ${address[2]}"
+                            Log.d("TAG - 로그", "returnAddress: index:4 / $returnAddress")
                         }  else {
                             returnAddress = ""
                             Log.d("TAG - 로그", "읍 면 동이 없는 주소입니다.")
                         }
-//                        returnAddress = if(address[4].contains("동")){
-//                            "${address[1]} ${address[2]} ${address[3]} ${address[4]}"
-//                        } else {
-//                            "${address[1]} ${address[2]} ${address[3]}"
-//                        }
                     }
                     if(returnAddress != ""){
                         break
